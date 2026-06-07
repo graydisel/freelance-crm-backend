@@ -5,19 +5,27 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProjectEntity } from './projects/project.entity';
 import { TaskEntity } from './tasks/task.entity';
 import { ProjectsModule } from './projects/projects.module';
+import * as process from "node:process";
+import {ConfigModule} from "@nestjs/config";
+import { TasksModule } from './tasks/tasks.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      url: 'postgresql://neondb_owner:npg_So9fjty0ZEWu@ep-falling-mouse-agxjn4pq.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require',
+      url: process.env.POSTGRES_BASE,
       entities: [ProjectEntity, TaskEntity],
       synchronize: true,
       ssl: true,
     }),
     ProjectsModule,
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {
+}
