@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { ProjectEntity } from '../projects/project.entity';
+import * as tasksModel from '../models/tasks.model';
 
 @Entity('tasks')
 export class TaskEntity {
@@ -20,7 +21,7 @@ export class TaskEntity {
     enum: ['todo', 'in-progress', 'done'],
     default: 'todo',
   })
-  status: 'todo' | 'in-progress' | 'done';
+  status: tasksModel.TaskStatus;
   @ManyToOne(() => ProjectEntity, (project) => project.tasks, {
     onDelete: 'CASCADE',
   })

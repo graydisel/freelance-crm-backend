@@ -5,8 +5,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProjectEntity } from './projects/project.entity';
 import { TaskEntity } from './tasks/task.entity';
 import { ProjectsModule } from './projects/projects.module';
-import * as process from "node:process";
-import {ConfigModule} from "@nestjs/config";
+import * as process from 'node:process';
+import { ConfigModule } from '@nestjs/config';
 import { TasksModule } from './tasks/tasks.module';
 
 @Module({
@@ -27,5 +27,4 @@ import { TasksModule } from './tasks/tasks.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {
-}
+export class AppModule {}
