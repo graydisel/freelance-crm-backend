@@ -1,30 +1,54 @@
 import {
-  Column,
+  Column, CreateDateColumn,
   Entity,
-  JoinColumn,
+  JoinColumn, ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { ProjectEntity } from '../projects/project.entity';
-import * as tasksModel from '../models/tasks.model';
+import {TaskStatus} from "./enums/task-status.enum";
+import {TaskPriority} from "./enums/task-priority.enum";
+import {UserEntity} from "../users/user.entity";
 
 @Entity('tasks')
 export class TaskEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
-  @Column()
+
+  @Column( { type: 'varchar', length: 255 } )
   title: string;
-  @Column('text')
+
+  @Column({type: 'text', nullable: true})
   description: string;
+
   @Column({
     type: 'enum',
-    enum: ['todo', 'in-progress', 'done'],
-    default: 'todo',
+    enum: TaskStatus,
+    default: TaskStatus.TODO,
   })
-  status: tasksModel.TaskStatus;
+  status: TaskStatus;
+
+  @Column({
+    type: 'enum',
+    enum: TaskPriority,
+    default: TaskPriority.MEDIUM
+  })
+  priority: TaskPriority;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
   @ManyToOne(() => ProjectEntity, (project) => project.tasks, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'project_id' })
   project: ProjectEntity;
+
+  @ManyToOne(() => UserEntity, { onDelete: "SET NULL", nullable: true })
+  @JoinColumn({ name: 'assignee_id' })
+  assignee: UserEntity;
+
+  @ManyToOne(() => UserEntity, { onDelete: "RESTRICT"})
+  @JoinColumn({ name: 'creator_id' })
+  creator: UserEntity;
 }
