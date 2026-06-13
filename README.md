@@ -1,98 +1,37 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Project Description: CRM Kanban System for Project Management
+Full-Stack Web Application designed for tracking projects and managing tasks on a real-time Kanban board. Built using a robust architecture featuring Angular 17+ 
+(Frontend), NestJS (Backend), and PostgreSQL (Database).
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## 1. Target Audience
+The platform is engineered for small-to-medium businesses (SMBs), freelancers, digital agencies, and project managers who require a centralized, lightweight, and structured environment to streamline operations.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+* Freelancers and Contractors: Allows them to organize incoming client requests, track financial budgets per contract, and monitor tasks without administrative overhead.
 
-## Description
+* Project Managers and Team Leads: Provides full visibility over team velocity, allowing them to allocate resources effectively, prevent task stagnation, and break down projects into actionable tasks.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+* Executives and Business Owners: The future Dashboard view caters to strategic decision-makers by aggregating high-level financial health (total contract values) and team efficiency metrics across all operations at a single glance.
 
-## Project setup
+## 2. Core Functionality & Technical Features
+ ### Frontend Architecture (Angular)
+* **Dynamic Kanban Workspace:** Projects are represented as modular cards containing their own dedicated Kanban boards with classic workflow columns (To Do, In Progress, Done) for seamless task transition.
 
-```bash
-$ npm install
-```
+* **Modern State Management (Angular Signals):** Leverages fine-grained reactivity via Signals, eliminating heavy zone-based change detection cycles. This ensures immediate UI updates and ultra-fast rendering performance.
 
-## Compile and run the project
+* **Smart Network Caching:** Optimized request handling that prevents redundant HTTP GET requests to the server when users navigate between views, preserving client-side application state.
 
-```bash
-# development
-$ npm run start
+* **Robust Dynamic Validation (Reactive Forms):** Fully enforces strict client-side data entry rules during task creation (e.g., minimum character length, required fields) preventing broken payloads from hitting the network layer.
+  ### Backend & Database Architecture (NestJS & PostgreSQL) 
+* Enterprise-Grade RESTful API: Provides declarative, highly structured REST endpoints handling full CRUD functionalities for project tracking and task workflows (GET, POST, PUT, PATCH).
 
-# watch mode
-$ npm run start:dev
+* Relational Data Integrity: Features a true relational database schema mapping a One-to-Many relationship between projects and tasks. Configured with automated cascade deletion rules to maintain perfect relational sanitation.
 
-# production mode
-$ npm run start:prod
-```
+* Database-Level Constraint Validation (SQL Enum): Task state is locked down utilizing an strict native PostgreSQL enum type. This completely safeguards the dataset against corrupted, invalid, or loose string injections from malicious API calls.
 
-## Run tests
+* Isolated Environment Configuration: Runtime variables, database ports, and private cloud connection strings are entirely decoupled from the source code using standard .env configuration via @nestjs/config.
 
-```bash
-# unit tests
-$ npm run test
+## 3. Complete Tech Stack
+* Frontend Ecosystem: Angular 17+, TypeScript, RxJS (HttpClient observables), Angular Signals, Reactive Forms, SCSS.
 
-# e2e tests
-$ npm run test:e2e
+* Backend Ecosystem: NestJS, TypeORM (Object-Relational Mapping), TypeScript, Node.js, @nestjs/config.
 
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+* Database Infrastructure: PostgreSQL (hosted on Neon.tech cloud serverless platform).
