@@ -1,34 +1,61 @@
-import { Body, Controller, Param, Patch, Post, Put } from '@nestjs/common';
+import {Body, Controller, Get, Param, Patch, Post, Put, Req, UseGuards} from '@nestjs/common';
 import { TasksService } from './tasks.service';
-import * as tasksModel from '../models/tasks.model';
+import {CreateTaskDto} from "./dto/create-task.dto";
+import {TaskStatus} from "./enums/task-status.enum";
+import {TaskPriority} from "./enums/task-priority.enum";
+import {UpdateTaskDto} from "./dto/update-task.dto";
+import {AuthGuard} from "@nestjs/passport";
+import {Roles} from "../auth/decorators/roles.decorator";
+import {RolesGuard} from "../auth/guards/roles.guard";
 
 @Controller('tasks')
 export class TasksController {
-  constructor(private taskService: TasksService) {}
+  constructor(private tasksService: TasksService) {}
 
   @Post()
-  createTask(
-    @Body('projectId') projectId: string,
-    @Body('title') title: string,
-    @Body('description') description: string,
+  @Roles('admin', 'manager')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  create(
+      @Body() createTaskDto: CreateTaskDto,
+      @Req() req: any
   ) {
-    return this.taskService.createTask(projectId, title, description);
+    const creatorId = req.user.userId;
+    return this.tasksService.create(createTaskDto, creatorId);
+  }
+
+  @Get()
+  findAll() {
+    return this.tasksService.findAll();
+  }
+
+  @Get('project/:projectId')
+  findByProject(@Param('projectId') projectId: string) {
+    return this.tasksService.findByProject(projectId);
   }
 
   @Patch(':id/status')
   updateStatus(
     @Param('id') id: string,
-    @Body('newStatus') newStatus: tasksModel.TaskStatus,
+    @Body('newStatus') newStatus: TaskStatus,
   ) {
-    return this.taskService.updateTaskStatus(id, newStatus);
+    return this.tasksService.updateStatus(id, newStatus);
+  }
+
+  @Patch(':id/priority')
+  updatePriority(
+      @Param('id') id: string,
+      @Body('newPriority') newPriority: TaskPriority,
+  ) {
+    return this.tasksService.updatePriority(id, newPriority);
   }
 
   @Put(':id')
+  @Roles('admin', 'manager', 'developer')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   updateTask(
-    @Param('id') id: string,
-    @Body('title') title: string,
-    @Body('description') description: string,
+      @Param('id') id: string,
+      @Body() updateTaskDto: UpdateTaskDto,
   ) {
-    return this.taskService.updateTask(id, title, description);
+    return this.tasksService.updateTask(id, updateTaskDto);
   }
 }

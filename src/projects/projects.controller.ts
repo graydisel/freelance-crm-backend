@@ -1,5 +1,9 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import {Body, Controller, Get, Post, UseGuards} from '@nestjs/common';
 import { ProjectsService } from './projects.service';
+import {CreateProjectDto} from "./dto/create-project.dto";
+import {AuthGuard} from "@nestjs/passport";
+import {Roles} from "../auth/decorators/roles.decorator";
+import {RolesGuard} from "../auth/guards/roles.guard";
 
 @Controller('projects')
 export class ProjectsController {
@@ -10,11 +14,13 @@ export class ProjectsController {
   }
 
   @Post()
+  @Roles('admin', 'manager')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   createProject(
-    @Body('name') name: string,
-    @Body('clientName') clientName: string,
-    @Body('budget') budget: number,
+    @Body() createProjectDto: CreateProjectDto,
   ) {
-    return this.projectsService.create(name, clientName, budget);
+    return this.projectsService.create(createProjectDto);
   }
+
+
 }

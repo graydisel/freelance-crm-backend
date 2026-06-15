@@ -1,63 +1,101 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {Injectable, NotFoundException} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TaskEntity } from './task.entity';
-import { ProjectEntity } from '../projects/project.entity';
 import { Repository } from 'typeorm';
-import { TaskStatus } from '../models/tasks.model';
+import {CreateTaskDto} from "./dto/create-task.dto";
+import {UsersService} from "../users/users.service";
+import {ProjectsService} from "../projects/projects.service";
+import {TaskStatus} from "./enums/task-status.enum";
+import {UserEntity} from "../users/user.entity";
+import {UpdateTaskDto} from "./dto/update-task.dto";
+import {TaskPriority} from "./enums/task-priority.enum";
 
 @Injectable()
 export class TasksService {
   constructor(
     @InjectRepository(TaskEntity)
     private readonly taskRepository: Repository<TaskEntity>,
-    @InjectRepository(ProjectEntity)
-    private readonly projectRepository: Repository<ProjectEntity>,
+    private readonly projectsService: ProjectsService,
+    private readonly usersService: UsersService
   ) {}
-  async createTask(
-    projectId: string,
-    title: string,
-    description: string,
-  ): Promise<TaskEntity> {
-    const project = await this.projectRepository.findOne({
-      where: { id: projectId },
-    });
-    if (!project) {
-      throw new NotFoundException(`Project with id ${projectId} not found`);
+
+  async create(dto: CreateTaskDto, creatorId: string): Promise<TaskEntity> {
+    const project = await this.projectsService.findOne(dto.projectId);
+
+    let assignee: UserEntity | null = null;
+    if (dto.assigneeId) {
+      assignee = await this.usersService.findOne(dto.assigneeId);
     }
+    const creator = await this.usersService.findOne(creatorId);
 
     const newTask = this.taskRepository.create({
-      title,
-      description,
-      status: 'todo',
-      project,
+      title: dto.title,
+      description: dto.description,
+      status: dto.status,
+      priority: dto.priority,
+      project: project,
+      assignee: assignee,
+      creator: creator,
     });
 
     return this.taskRepository.save(newTask);
   }
 
-  async updateTaskStatus(
-    taskId: string,
-    newStatus: TaskStatus,
-  ): Promise<TaskEntity> {
-    const task = await this.taskRepository.findOne({ where: { id: taskId } });
+  async findAll(): Promise<TaskEntity[]> {
+    return this.taskRepository.find({
+      relations: {
+        project: true,
+        creator: true,
+        assignee: true,
+      },
+    });
+  }
+
+  async findOne(id: string): Promise<TaskEntity> {
+    const task = await this.taskRepository.findOne({
+      where: {id},
+      relations: {
+        project: true,
+        assignee: true,
+        creator: true,
+      }
+    });
     if (!task) {
-      throw new NotFoundException(`Project with id ${taskId} not found`);
+      throw new NotFoundException(`Task with id ${id} not found`);
     }
+    return task;
+  }
+
+  async findByProject(projectId: string): Promise<TaskEntity[]> {
+    return this.taskRepository.find({
+      where: { project: { id: projectId } },
+      relations: { assignee: true, creator: true },
+    });
+  }
+
+  async updateStatus(taskId: string, newStatus: TaskStatus): Promise<TaskEntity> {
+    const task = await this.findOne(taskId);
+
     task.status = newStatus;
     return this.taskRepository.save(task);
   }
 
-  async updateTask(
-    taskId: string,
-    title: string,
-    description: string,
-  ): Promise<TaskEntity> {
-    const task = await this.taskRepository.findOne({ where: { id: taskId } });
-    if (!task) {
-      throw new NotFoundException(`Project with id ${taskId} not found`);
+  async updatePriority(taskId: string, newPriority: TaskPriority): Promise<TaskEntity> {
+    const task = await this.findOne(taskId);
+
+    task.priority = newPriority;
+    return this.taskRepository.save(task);
+  }
+
+  async updateTask(taskId: string, dto: UpdateTaskDto): Promise<TaskEntity> {
+    const task = await this.findOne(taskId);
+
+    if (dto.title) task.title = dto.title;
+    if (dto.description) task.description = dto.description;
+
+    if (dto.assigneeId) {
+      task.assignee = await this.usersService.findOne(dto.assigneeId);
     }
-    task.title = title;
-    task.description = description;
     return this.taskRepository.save(task);
   }
 }

@@ -46,7 +46,7 @@ export class TaskEntity {
 
   @ManyToOne(() => UserEntity, { onDelete: "SET NULL", nullable: true })
   @JoinColumn({ name: 'assignee_id' })
-  assignee: UserEntity;
+  assignee: UserEntity | null;
 
   @ManyToOne(() => UserEntity, { onDelete: "RESTRICT"})
   @JoinColumn({ name: 'creator_id' })

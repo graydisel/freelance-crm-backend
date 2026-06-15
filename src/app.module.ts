@@ -14,6 +14,7 @@ import {RoleEntity} from "./roles/role.entity";
 import { ClientProfilesModule } from './client-profiles/client-profiles.module';
 import { RolesModule } from './roles/roles.module';
 import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { UsersModule } from './users/users.module';
     ClientProfilesModule,
     RolesModule,
     UsersModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

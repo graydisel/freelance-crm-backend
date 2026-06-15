@@ -20,8 +20,6 @@ export class UserEntity {
     @ManyToOne(() => RoleEntity, role => role.users)
     @JoinColumn({ name: 'role_id' })
     role: RoleEntity
-    @OneToMany(() => ProjectEntity, (project) => project)
-    projects: ProjectEntity[];
     @ManyToOne(() => ClientProfileEntity, clientProfile =>
         clientProfile.users, { nullable: true, onDelete: 'SET NULL' })
     @JoinColumn({ name: 'client_id' })

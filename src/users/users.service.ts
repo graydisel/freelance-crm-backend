@@ -4,6 +4,7 @@ import {UserEntity} from "./user.entity";
 import {Repository} from "typeorm";
 import {CreateUserDto} from "./dto/create-user.dto";
 import {RolesService} from "../roles/roles.service";
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -24,9 +25,12 @@ export class UsersService {
             throw new BadRequestException(`Role '${createUserDto.roleName}' not found`);
         }
 
+        const salt = await bcrypt.genSalt();
+        const hashedPassword = await bcrypt.hash(createUserDto.passwordHash, salt);
+
         const newUser = this.userRepository.create({
             email: createUserDto.email,
-            passwordHash: createUserDto.passwordHash,
+            passwordHash: hashedPassword,
             firstName: createUserDto.firstName,
             lastName: createUserDto.lastName,
             role: validRole,
@@ -39,6 +43,27 @@ export class UsersService {
                 role: true,
                 client: true,
             },
+        });
+    }
+
+    async findOne(id: string): Promise<UserEntity> {
+        const user = await this.userRepository.findOne({
+            where: { id },
+            relations: {
+                role: true,
+                client: true
+            },
+        })
+        if (!user) {
+            throw new BadRequestException(`User ${id} not found`);
+        }
+        return user;
+    }
+
+    async findByEmail(email: string): Promise<UserEntity | null> {
+        return await this.userRepository.findOne({
+            where: {email},
+            relations: {role: true, client: true},
         });
     }
 }
