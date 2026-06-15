@@ -1,11 +1,11 @@
-import {Injectable, NotFoundException} from '@nestjs/common';
-import {InjectRepository} from '@nestjs/typeorm';
-import {ProjectEntity} from './project.entity';
-import {Repository} from 'typeorm';
-import {CreateProjectDto} from "./dto/create-project.dto";
-import {ProjectStatus} from "./enums/project-status.enum";
-import {UsersService} from "../users/users.service";
-import {ClientProfilesService} from "../client-profiles/client-profiles.service";
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ProjectEntity } from './project.entity';
+import { Repository } from 'typeorm';
+import { CreateProjectDto } from './dto/create-project.dto';
+import { ProjectStatus } from './enums/project-status.enum';
+import { UsersService } from '../users/users.service';
+import { ClientProfilesService } from '../client-profiles/client-profiles.service';
 
 @Injectable()
 export class ProjectsService {
@@ -16,9 +16,7 @@ export class ProjectsService {
     private readonly clientProfilesService: ClientProfilesService,
   ) {}
 
-  async create(
-      dto: CreateProjectDto,
-  ): Promise<ProjectEntity> {
+  async create(dto: CreateProjectDto): Promise<ProjectEntity> {
     const client = await this.clientProfilesService.findOne(dto.clientId);
 
     const manager = await this.usersService.findOne(dto.managerId);
@@ -50,7 +48,7 @@ export class ProjectsService {
         client: true,
         manager: true,
         tasks: true,
-      }
+      },
     });
     if (!project) {
       throw new NotFoundException(`Project with id: ${id} not found `);

@@ -1,14 +1,14 @@
-import {Injectable, NotFoundException} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TaskEntity } from './task.entity';
 import { Repository } from 'typeorm';
-import {CreateTaskDto} from "./dto/create-task.dto";
-import {UsersService} from "../users/users.service";
-import {ProjectsService} from "../projects/projects.service";
-import {TaskStatus} from "./enums/task-status.enum";
-import {UserEntity} from "../users/user.entity";
-import {UpdateTaskDto} from "./dto/update-task.dto";
-import {TaskPriority} from "./enums/task-priority.enum";
+import { CreateTaskDto } from './dto/create-task.dto';
+import { UsersService } from '../users/users.service';
+import { ProjectsService } from '../projects/projects.service';
+import { TaskStatus } from './enums/task-status.enum';
+import { UserEntity } from '../users/user.entity';
+import { UpdateTaskDto } from './dto/update-task.dto';
+import { TaskPriority } from './enums/task-priority.enum';
 
 @Injectable()
 export class TasksService {
@@ -16,7 +16,7 @@ export class TasksService {
     @InjectRepository(TaskEntity)
     private readonly taskRepository: Repository<TaskEntity>,
     private readonly projectsService: ProjectsService,
-    private readonly usersService: UsersService
+    private readonly usersService: UsersService,
   ) {}
 
   async create(dto: CreateTaskDto, creatorId: string): Promise<TaskEntity> {
@@ -53,12 +53,12 @@ export class TasksService {
 
   async findOne(id: string): Promise<TaskEntity> {
     const task = await this.taskRepository.findOne({
-      where: {id},
+      where: { id },
       relations: {
         project: true,
         assignee: true,
         creator: true,
-      }
+      },
     });
     if (!task) {
       throw new NotFoundException(`Task with id ${id} not found`);
@@ -73,14 +73,20 @@ export class TasksService {
     });
   }
 
-  async updateStatus(taskId: string, newStatus: TaskStatus): Promise<TaskEntity> {
+  async updateStatus(
+    taskId: string,
+    newStatus: TaskStatus,
+  ): Promise<TaskEntity> {
     const task = await this.findOne(taskId);
 
     task.status = newStatus;
     return this.taskRepository.save(task);
   }
 
-  async updatePriority(taskId: string, newPriority: TaskPriority): Promise<TaskEntity> {
+  async updatePriority(
+    taskId: string,
+    newPriority: TaskPriority,
+  ): Promise<TaskEntity> {
     const task = await this.findOne(taskId);
 
     task.priority = newPriority;

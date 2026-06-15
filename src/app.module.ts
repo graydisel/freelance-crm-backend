@@ -8,9 +8,9 @@ import { ProjectsModule } from './projects/projects.module';
 import * as process from 'node:process';
 import { ConfigModule } from '@nestjs/config';
 import { TasksModule } from './tasks/tasks.module';
-import {UserEntity} from "./users/user.entity";
-import {ClientProfileEntity} from "./client-profiles/client-profile.entity";
-import {RoleEntity} from "./roles/role.entity";
+import { UserEntity } from './users/user.entity';
+import { ClientProfileEntity } from './client-profiles/client-profile.entity';
+import { RoleEntity } from './roles/role.entity';
 import { ClientProfilesModule } from './client-profiles/client-profiles.module';
 import { RolesModule } from './roles/roles.module';
 import { UsersModule } from './users/users.module';
@@ -24,7 +24,13 @@ import { AuthModule } from './auth/auth.module';
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.POSTGRES_BASE,
-      entities: [ProjectEntity, TaskEntity, UserEntity, ClientProfileEntity, RoleEntity],
+      entities: [
+        ProjectEntity,
+        TaskEntity,
+        UserEntity,
+        ClientProfileEntity,
+        RoleEntity,
+      ],
       synchronize: false,
       migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
       ssl: true,

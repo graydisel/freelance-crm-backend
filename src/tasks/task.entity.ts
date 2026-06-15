@@ -1,24 +1,26 @@
 import {
-  Column, CreateDateColumn,
+  Column,
+  CreateDateColumn,
   Entity,
-  JoinColumn, ManyToMany,
+  JoinColumn,
+  ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { ProjectEntity } from '../projects/project.entity';
-import {TaskStatus} from "./enums/task-status.enum";
-import {TaskPriority} from "./enums/task-priority.enum";
-import {UserEntity} from "../users/user.entity";
+import { TaskStatus } from './enums/task-status.enum';
+import { TaskPriority } from './enums/task-priority.enum';
+import { UserEntity } from '../users/user.entity';
 
 @Entity('tasks')
 export class TaskEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column( { type: 'varchar', length: 255 } )
+  @Column({ type: 'varchar', length: 255 })
   title: string;
 
-  @Column({type: 'text', nullable: true})
+  @Column({ type: 'text', nullable: true })
   description: string;
 
   @Column({
@@ -31,7 +33,7 @@ export class TaskEntity {
   @Column({
     type: 'enum',
     enum: TaskPriority,
-    default: TaskPriority.MEDIUM
+    default: TaskPriority.MEDIUM,
   })
   priority: TaskPriority;
 
@@ -44,11 +46,11 @@ export class TaskEntity {
   @JoinColumn({ name: 'project_id' })
   project: ProjectEntity;
 
-  @ManyToOne(() => UserEntity, { onDelete: "SET NULL", nullable: true })
+  @ManyToOne(() => UserEntity, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'assignee_id' })
   assignee: UserEntity | null;
 
-  @ManyToOne(() => UserEntity, { onDelete: "RESTRICT"})
+  @ManyToOne(() => UserEntity, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'creator_id' })
   creator: UserEntity;
 }

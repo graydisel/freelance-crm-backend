@@ -1,23 +1,28 @@
-import {Body, Controller, Get, Param, Post} from '@nestjs/common';
-import {CreateClientDto} from "./dto/create-client.dto";
-import {ClientProfilesService} from "./client-profiles.service";
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { CreateClientDto } from './dto/create-client.dto';
+import { ClientProfilesService } from './client-profiles.service';
 
 @Controller('client')
 export class ClientProfilesController {
-    constructor(private readonly clientProfilesService: ClientProfilesService) {}
+  constructor(private readonly clientProfilesService: ClientProfilesService) {}
 
-    @Post()
-    create(@Body() createCompanyDto: CreateClientDto) {
-        return this.clientProfilesService.create(createCompanyDto);
-    }
+  @Post()
+  create(@Body() createCompanyDto: CreateClientDto) {
+    return this.clientProfilesService.create(createCompanyDto);
+  }
 
-    @Get()
-    findAll() {
-        return this.clientProfilesService.findAll();
-    }
+  @Get('dashboard/stats')
+  getStats() {
+    return this.clientProfilesService.getDashboardStats();
+  }
 
-    @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.clientProfilesService.findOne(id);
-    }
+  @Get()
+  findAll() {
+    return this.clientProfilesService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.clientProfilesService.findOne(id);
+  }
 }
