@@ -11,11 +11,6 @@ export class ClientProfilesController {
     return this.clientProfilesService.create(createCompanyDto);
   }
 
-  @Get('dashboard/stats')
-  getStats() {
-    return this.clientProfilesService.getDashboardStats();
-  }
-
   @Get()
   findAll() {
     return this.clientProfilesService.findAll();

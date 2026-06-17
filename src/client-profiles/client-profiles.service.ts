@@ -4,7 +4,6 @@ import { ClientProfileEntity } from './client-profile.entity';
 import { Repository } from 'typeorm';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
-import { ClientStatus } from './enums/client-status.enum';
 
 @Injectable()
 export class ClientProfilesService {
@@ -32,36 +31,6 @@ export class ClientProfilesService {
     if (dto.status) client.status = dto.status;
 
     return this.clientProfileRepository.save(client);
-  }
-
-  async getDashboardStats() {
-    const totalActive = await this.clientProfileRepository.count({
-      where: { status: ClientStatus.ACTIVE },
-    });
-
-    const totalLeads = await this.clientProfileRepository.count({
-      where: { status: ClientStatus.LEAD },
-    });
-
-    const totalArchived = await this.clientProfileRepository.count({
-      where: { status: ClientStatus.INACTIVE },
-    });
-
-    const activeClients = await this.clientProfileRepository.find({
-      where: { status: ClientStatus.ACTIVE },
-    });
-
-    const totalRevenue = activeClients.reduce(
-      (sum, client) => sum + client.contractValue,
-      0,
-    );
-
-    return {
-      activeClientsCount: totalActive,
-      leadsCount: totalLeads,
-      archivedClientsCount: totalArchived,
-      totalRevenue: totalRevenue,
-    };
   }
 
   async findAll(): Promise<ClientProfileEntity[]> {
