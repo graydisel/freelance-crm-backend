@@ -1,5 +1,6 @@
 import { ClientStatus } from '../enums/client-status.enum';
 import {
+  IsEmail,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -14,6 +15,14 @@ export class CreateClientDto {
 
   @IsNumber()
   contractValue?: number;
+
+  @IsString()
+  @IsNotEmpty()
+  contactPerson: string;
+
+  @IsEmail()
+  @IsNotEmpty()
+  contactEmail: string;
 
   @IsString()
   phone?: string;

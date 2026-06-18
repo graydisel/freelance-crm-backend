@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ProjectEntity } from './project.entity';
 import { Repository } from 'typeorm';
 import { CreateProjectDto } from './dto/create-project.dto';
-import { ProjectStatus } from './enums/project-status.enum';
 import { UsersService } from '../users/users.service';
 import { ClientProfilesService } from '../client-profiles/client-profiles.service';
 

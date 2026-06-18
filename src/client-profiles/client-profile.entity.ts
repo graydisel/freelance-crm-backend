@@ -17,6 +17,10 @@ export class ClientProfileEntity {
     default: 0,
   })
   contractValue: number;
+  @Column({ name: 'contact_person', type: 'varchar', length: 50 })
+  contactPerson: string;
+  @Column({ name: 'contact_email', type: 'varchar', length: 255 })
+  contactEmail: string;
   @Column({ type: 'varchar', length: 50, nullable: true })
   phone: string;
   @Column({

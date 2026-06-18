@@ -23,7 +23,7 @@ export class DashboardService {
     });
 
     const totalArchived = await this.clientProfileRepository.count({
-      where: { status: ClientStatus.INACTIVE },
+      where: { status: ClientStatus.ARCHIVED },
     });
 
     const activeClients = await this.clientProfileRepository.find({
