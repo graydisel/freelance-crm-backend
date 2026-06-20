@@ -4,15 +4,15 @@ import { ClientProfileEntity } from './client-profile.entity';
 import { Repository } from 'typeorm';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
-import {GetClientsFilterDto} from "./dto/get-clients-filter.dto";
-import {ClientStatus} from "./enums/client-status.enum";
+import { GetClientsFilterDto } from "./dto/get-clients-filter.dto";
+import { ClientStatus } from "./enums/client-status.enum";
 
 @Injectable()
 export class ClientProfilesService {
   constructor(
     @InjectRepository(ClientProfileEntity)
     private readonly clientProfileRepository: Repository<ClientProfileEntity>,
-  ) {}
+  ) { }
 
   async create(dto: CreateClientDto): Promise<ClientProfileEntity> {
     const newClientProfile = this.clientProfileRepository.create({
@@ -60,11 +60,11 @@ export class ClientProfilesService {
   }
 
   async findPaginated(filterDto: GetClientsFilterDto) {
-    const { page, limit, search, status } = filterDto;
-    let skip = 0;
-    if (page && limit && search) {
-      skip = (page - 1) * limit;
-    }
+    const page = filterDto.page || 1;
+    const limit = filterDto.limit || 10;
+    const { search, status } = filterDto;
+    const skip = (page - 1) * limit;
+
 
     const metricsRaw = await this.clientProfileRepository
       .createQueryBuilder('client')
@@ -130,7 +130,7 @@ export class ClientProfilesService {
         totalItems,
         currentPage: page,
         pageSize: limit,
-        totalPages: Math.ceil(totalItems / (limit ?? 10)),
+        totalPages: Math.ceil(totalItems / limit),
         metrics: {
           activeCount,
           leadsCount,

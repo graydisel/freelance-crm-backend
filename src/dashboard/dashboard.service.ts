@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import {InjectRepository} from "@nestjs/typeorm";
-import {ClientProfileEntity} from "../client-profiles/client-profile.entity";
-import {Repository} from "typeorm";
-import {ClientStatus} from "../client-profiles/enums/client-status.enum";
-import {TaskStatus} from "../tasks/enums/task-status.enum";
-import {ProjectStatus} from "../projects/enums/project-status.enum";
+import { InjectRepository } from "@nestjs/typeorm";
+import { ClientProfileEntity } from "../client-profiles/client-profile.entity";
+import { Repository } from "typeorm";
+import { ClientStatus } from "../client-profiles/enums/client-status.enum";
+import { TaskStatus } from "../tasks/enums/task-status.enum";
+import { ProjectStatus } from "../projects/enums/project-status.enum";
 
 @Injectable()
 export class DashboardService {
   constructor(
     @InjectRepository(ClientProfileEntity)
     private readonly clientProfileRepository: Repository<ClientProfileEntity>,
-  ) {}
+  ) { }
 
   async getDashboardStats() {
     const totalActive = await this.clientProfileRepository.count({
@@ -36,7 +36,7 @@ export class DashboardService {
     });
 
     const totalRevenue = activeClients.reduce(
-      (sum, client) => sum + client.contractValue,
+      (sum, client) => sum + Number(client.contractValue || 0),
       0,
     );
 
