@@ -1,29 +1,78 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ClientProfileEntity } from './client-profile.entity';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { GetClientsFilterDto } from "./dto/get-clients-filter.dto";
 import { ClientStatus } from "./enums/client-status.enum";
+import { UsersService } from 'src/users/users.service';
+import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { UserEntity } from 'src/users/user.entity';
 
 @Injectable()
 export class ClientProfilesService {
   constructor(
     @InjectRepository(ClientProfileEntity)
     private readonly clientProfileRepository: Repository<ClientProfileEntity>,
+
+    private readonly usersService: UsersService,
+    private readonly dataSource: DataSource,
   ) { }
 
   async create(dto: CreateClientDto): Promise<ClientProfileEntity> {
-    const newClientProfile = this.clientProfileRepository.create({
-      companyName: dto.companyName,
-      contractValue: dto.contractValue || 0,
-      contactPerson: dto.contactPerson,
-      contactEmail: dto.contactEmail,
-      phone: dto.phone,
-      status: dto.status,
+    const emailNormalized = dto.contactEmail.toLowerCase().trim();
+
+    return await this.dataSource.transaction(async (transactionalEntityManager) => {
+      const newClientProfile = transactionalEntityManager.create(ClientProfileEntity, {
+        companyName: dto.companyName,
+        contractValue: dto.contractValue || 0,
+        contactPerson: dto.contactPerson,
+        contactEmail: emailNormalized,
+        phone: dto.phone,
+        status: dto.status || ClientStatus.LEAD,
+      });
+
+      const savedClient = await transactionalEntityManager.save(ClientProfileEntity, newClientProfile);
+
+      const existingUser = await this.usersService.findByEmail(emailNormalized);
+
+      if (existingUser) {
+        const attachedCompanyId = existingUser.client?.id;
+
+        if (!attachedCompanyId) {
+
+          existingUser.client = { id: savedClient.id } as ClientProfileEntity;
+          await transactionalEntityManager.save(UserEntity, existingUser);
+
+          console.log(`[CRM] Current user ${emailNormalized} successfully attached to new company.`);
+
+        } else if (attachedCompanyId !== savedClient.id) {
+          throw new ConflictException(
+            `User with email ${emailNormalized} is already attached to another company.`
+          );
+        }
+
+      } else {
+        const temporaryPassword = Math.random().toString(36).slice(-8);
+        const nameParts = dto.contactPerson.split(' ');
+        const firstName = nameParts[0] || 'Client';
+        const lastName = nameParts[1] || 'Contact';
+
+        const createUserDto: CreateUserDto = {
+          email: emailNormalized,
+          passwordHash: temporaryPassword,
+          firstName,
+          lastName,
+          roleName: 'client',
+          companyId: savedClient.id,
+        };
+
+        await this.usersService.createUser(createUserDto, transactionalEntityManager);
+        console.log(`[CRM] Created user on the fly. Temporary password: ${temporaryPassword}`);
+      }
+      return savedClient;
     });
-    return this.clientProfileRepository.save(newClientProfile);
   }
 
   async update(id: string, dto: UpdateClientDto): Promise<ClientProfileEntity> {
