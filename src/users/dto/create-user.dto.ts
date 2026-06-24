@@ -5,7 +5,7 @@ export class CreateUserDto {
   email: string;
 
   @IsString()
-  @MinLength(6, { message: 'Пароль должен быть не менее 6 символов' })
+  @MinLength(6, { message: 'Password must be at least 6 characters long' })
   passwordHash: string;
 
   firstName: string;

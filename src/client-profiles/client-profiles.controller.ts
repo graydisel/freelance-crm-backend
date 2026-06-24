@@ -1,14 +1,15 @@
-import {Body, Controller, Get, Param, Post, Query} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { CreateClientDto } from './dto/create-client.dto';
 import { ClientProfilesService } from './client-profiles.service';
-import {Roles} from "../auth/decorators/roles.decorator";
-import {GetClientsFilterDto} from "./dto/get-clients-filter.dto";
+import { Roles } from "../auth/decorators/roles.decorator";
+import { GetClientsFilterDto } from "./dto/get-clients-filter.dto";
 
 @Controller('client')
 export class ClientProfilesController {
-  constructor(private readonly clientProfilesService: ClientProfilesService) {}
+  constructor(private readonly clientProfilesService: ClientProfilesService) { }
 
   @Post()
+  @Roles('admin', 'manager')
   create(@Body() createCompanyDto: CreateClientDto) {
     return this.clientProfilesService.create(createCompanyDto);
   }
