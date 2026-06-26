@@ -81,7 +81,7 @@ export class ClientProfilesService {
     if (dto.companyName) client.companyName = dto.companyName;
     if (dto.contractValue) client.contractValue = dto.contractValue;
     if (dto.contactPerson) client.contactPerson = dto.contactPerson;
-    if (dto.contactEmail) client.contactEmail = dto.contactEmail;
+    if (dto.contactEmail) client.contactEmail = dto.contactEmail.toLowerCase().trim();
     if (dto.phone) client.phone = dto.phone;
     if (dto.status) client.status = dto.status;
 
