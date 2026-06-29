@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer';
 import { ClientStatus } from '../enums/client-status.enum';
 import {
   IsEmail,
@@ -10,21 +11,26 @@ import {
 
 export class CreateClientDto {
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Company name is required' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   companyName: string;
 
   @IsNumber()
   contractValue?: number;
 
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Contact person is required' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   contactPerson: string;
 
   @IsEmail()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Contact email is required' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   contactEmail: string;
 
   @IsString()
+  @IsNotEmpty({ message: 'Phone number is required' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   phone?: string;
 
   @IsOptional()

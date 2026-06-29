@@ -151,44 +151,49 @@ export class ClientProfilesService {
     const { search, status } = filterDto;
     const skip = (page - 1) * limit;
 
-
-    const metricsRaw = await this.clientProfileRepository
-      .createQueryBuilder('client')
-      .select('client.status', 'status')
-      .addSelect('COUNT(client.id)', 'count')
-      .addSelect('SUM(client.contract_value)', 'totalRevenue')
-      .groupBy('client.status')
-      .getRawMany();
-
-    let activeCount = 0;
-    let leadsCount = 0;
-    let archivedCount = 0;
-    let totalActiveRevenue = 0;
-
-    metricsRaw.forEach(row => {
-      const count = parseInt(row.count, 10) || 0;
-      if (row.status === ClientStatus.ACTIVE) {
-        activeCount = count;
-        totalActiveRevenue = parseFloat(row.totalRevenue) || 0;
-      } else if (row.status === ClientStatus.LEAD) {
-        leadsCount = count;
-      } else if (row.status === ClientStatus.ARCHIVED) {
-        archivedCount = count;
-      }
-    });
-
     const query = this.clientProfileRepository.createQueryBuilder('client');
+
+    const activeMetricsQuery = this.clientProfileRepository.createQueryBuilder('client')
+      .where('client.status = :status', { status: ClientStatus.ACTIVE });
+
+    const leadsMetricsQuery = this.clientProfileRepository.createQueryBuilder('client')
+      .where('client.status = :status', { status: ClientStatus.LEAD });
+
+    const archivedMetricsQuery = this.clientProfileRepository.createQueryBuilder('client')
+      .where('client.status = :status', { status: ClientStatus.ARCHIVED });
 
     if (status && status !== 'all') {
       query.andWhere('client.status = :status', { status });
     }
 
     if (search) {
-      query.andWhere(
-        '(LOWER(client.companyName) LIKE LOWER(:search) OR LOWER(client.contactPerson) LIKE LOWER(:search) OR LOWER(client.contactEmail) LIKE LOWER(:search))',
-        { search: `%${search}%` },
-      );
+      const searchFilter = '(LOWER(client.companyName) LIKE LOWER(:search) OR LOWER(client.contactPerson) LIKE LOWER(:search) OR LOWER(client.contactEmail) LIKE LOWER(:search))';
+      const searchParam = { search: `%${search}%` };
+
+      activeMetricsQuery.andWhere(searchFilter, searchParam);
+      leadsMetricsQuery.andWhere(searchFilter, searchParam);
+      archivedMetricsQuery.andWhere(searchFilter, searchParam);
+      query.andWhere(searchFilter, searchParam);
     }
+
+    const [activeCount, leadsCount, archivedCount] = await Promise.all([
+      activeMetricsQuery.getCount(),
+      leadsMetricsQuery.getCount(),
+      archivedMetricsQuery.getCount(),
+    ]);
+
+    const [globalActive, globalLeads, globalArchived] = await Promise.all([
+      this.clientProfileRepository.count({ where: { status: ClientStatus.ACTIVE } }),
+      this.clientProfileRepository.count({ where: { status: ClientStatus.LEAD } }),
+      this.clientProfileRepository.count({ where: { status: ClientStatus.ARCHIVED } }),
+    ]);
+
+    const totalActiveRevenueResult = await this.clientProfileRepository
+      .createQueryBuilder('client')
+      .select('SUM(client.contractValue)', 'sum')
+      .where('client.status = :status', { status: ClientStatus.ACTIVE })
+      .getRawOne();
+    const totalActiveRevenue = Number(totalActiveRevenueResult?.sum) || 0;
 
     query.orderBy('client.createdAt', 'DESC');
 
@@ -217,11 +222,20 @@ export class ClientProfilesService {
         currentPage: page,
         pageSize: limit,
         totalPages: Math.ceil(totalItems / limit),
-        metrics: {
+
+        filteredMetrics: {
           activeCount,
           leadsCount,
           archivedCount,
-          totalActiveRevenue,
+          totalCount: activeCount + leadsCount + archivedCount
+        },
+
+        globalMetrics: {
+          activeCount: globalActive,
+          leadsCount: globalLeads,
+          archivedCount: globalArchived,
+          totalGlobal: globalActive + globalLeads + globalArchived,
+          totalActiveRevenue
         }
       },
     };
