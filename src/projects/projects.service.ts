@@ -5,7 +5,8 @@ import { Repository } from 'typeorm';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UsersService } from '../users/users.service';
 import { ClientProfilesService } from '../client-profiles/client-profiles.service';
-import {GetProjectsFilterDto} from "./dto/get-projects-filter.dto";
+import { GetProjectsFilterDto } from "./dto/get-projects-filter.dto";
+import { ProjectStatus } from './enums/project-status.enum';
 
 @Injectable()
 export class ProjectsService {
@@ -14,7 +15,7 @@ export class ProjectsService {
     private readonly projectRepository: Repository<ProjectEntity>,
     private readonly usersService: UsersService,
     private readonly clientProfilesService: ClientProfilesService,
-  ) {}
+  ) { }
 
   async create(dto: CreateProjectDto): Promise<ProjectEntity> {
     const client = await this.clientProfilesService.findOne(dto.clientId);
@@ -41,12 +42,7 @@ export class ProjectsService {
       .createQueryBuilder('project')
       .leftJoinAndSelect('project.client', 'client')
       .leftJoinAndSelect('project.manager', 'manager')
-      .addSelect((subQuery) => {
-        return subQuery
-          .select('COUNT(task.id)', 'count')
-          .from('tasks', 'task')
-          .where('task.project_id = project.id');
-      }, 'project_tasksCount');
+      .leftJoinAndSelect('project.tasks', 'tasks');
 
     if (status && status !== 'all') {
       query.andWhere('project.status = :status', { status });
@@ -66,6 +62,48 @@ export class ProjectsService {
       .take(limit)
       .getManyAndCount();
 
+    const createMetricsQuery = (statusValue: ProjectStatus) => {
+      const qb = this.projectRepository
+        .createQueryBuilder('project')
+        .leftJoin('project.client', 'client')
+        .where('project.status = :statusValue', { statusValue });
+
+      if (search) {
+        qb.andWhere(
+          '(LOWER(project.name) LIKE LOWER(:search) OR LOWER(client.companyName) LIKE LOWER(:search))',
+          { search: `%${search}%` },
+        );
+      }
+      return qb;
+    };
+
+    const planningMetricsQuery = createMetricsQuery(ProjectStatus.PLANNING);
+    const activeMetricsQuery = createMetricsQuery(ProjectStatus.ACTIVE);
+    const reviewMetricsQuery = createMetricsQuery(ProjectStatus.REVIEW);
+    const completedMetricsQuery = createMetricsQuery(ProjectStatus.COMPLETED);
+    const pausedMetricsQuery = createMetricsQuery(ProjectStatus.PAUSED);
+
+    const [
+      planningCount,
+      activeCount,
+      reviewCount,
+      completedCount,
+      pausedCount,
+    ] = await Promise.all([
+      planningMetricsQuery.getCount(),
+      activeMetricsQuery.getCount(),
+      reviewMetricsQuery.getCount(),
+      completedMetricsQuery.getCount(),
+      pausedMetricsQuery.getCount(),
+    ]);
+
+    const totalCount =
+      planningCount +
+      activeCount +
+      reviewCount +
+      completedCount +
+      pausedCount;
+
 
     const mappedData = projects.map((project) => ({
       id: project.id,
@@ -81,18 +119,25 @@ export class ProjectsService {
         id: project.manager.id,
         fullName: `${project.manager.firstName} ${project.manager.lastName}`.trim(),
       } : null,
-      tasksCount: Number((project as any).tasksCount) || 0,
+      tasksCount: project.tasks ? project.tasks.length : 0,
     }));
 
     return {
       data: mappedData,
       meta: {
         totalItems,
-        itemCount: mappedData.length,
+        currentPage: page,
         itemsPerPage: limit,
         totalPages: Math.ceil(totalItems / limit),
-        currentPage: page,
-      },
+        filteredMetrics: {
+          planningCount,
+          activeCount,
+          reviewCount,
+          completedCount,
+          pausedCount,
+          totalCount
+        }
+      }
     };
   }
 
