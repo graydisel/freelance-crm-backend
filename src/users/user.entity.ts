@@ -9,7 +9,6 @@ import {
 } from 'typeorm';
 import { ClientProfileEntity } from '../client-profiles/client-profile.entity';
 import { RoleEntity } from '../roles/role.entity';
-import { ProjectEntity } from '../projects/project.entity';
 
 @Entity('users')
 export class UserEntity {

@@ -7,6 +7,7 @@ import { RolesService } from '../roles/roles.service';
 import * as bcrypt from 'bcrypt';
 import { EntityManager } from 'typeorm';
 import { ClientProfileEntity } from 'src/client-profiles/client-profile.entity';
+import { UserRoleEnum } from './enums/user-role.enum';
 
 @Injectable()
 export class UsersService {
@@ -82,5 +83,29 @@ export class UsersService {
       where: { email: email.toLowerCase().trim() },
       relations: { role: true, client: true },
     });
+  }
+
+  async findAvailableByRole(search: string, roleName: UserRoleEnum) {
+    const searchTerms = search ? search.trim() : '';
+
+    return this.userRepository.createQueryBuilder('user')
+      .select([
+        'user.id',
+        'user.firstName',
+        'user.lastName',
+        'user.email'
+      ])
+      .leftJoin('user.role', 'roleRelation')
+      .leftJoin('user.client', 'clientRelation')
+      .addSelect(['roleRelation.id', 'roleRelation.name'])
+      .where('roleRelation.name = :roleName', { roleName })
+      .andWhere('clientRelation.id IS NULL')
+      .andWhere(
+        '(user.firstName ILIKE :search OR user.lastName ILIKE :search OR user.email ILIKE :search)',
+        { search: `%${searchTerms}%` }
+      )
+      .orderBy('user.firstName', 'ASC')
+      .limit(5)
+      .getMany();
   }
 }
