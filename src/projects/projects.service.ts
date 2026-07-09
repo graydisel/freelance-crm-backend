@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ProjectEntity } from './project.entity';
 import { Repository } from 'typeorm';
 import { CreateProjectDto } from './dto/create-project.dto';
+import { UpdateProjectDto } from './dto/update-project.dto';
 import { UsersService } from '../users/users.service';
 import { ClientProfilesService } from '../client-profiles/client-profiles.service';
 import { GetProjectsFilterDto } from "./dto/get-projects-filter.dto";
@@ -139,6 +140,28 @@ export class ProjectsService {
         }
       }
     };
+  }
+
+  async update(id: string, dto: UpdateProjectDto): Promise<ProjectEntity> {
+    const project = await this.findOne(id);
+
+    if (dto.name !== undefined) {
+      project.name = dto.name;
+    }
+    if (dto.description !== undefined) {
+      project.description = dto.description;
+    }
+    if (dto.status !== undefined) {
+      project.status = dto.status;
+    }
+    if (dto.clientId) {
+      project.client = await this.clientProfilesService.findOne(dto.clientId);
+    }
+    if (dto.managerId) {
+      project.manager = await this.usersService.findOne(dto.managerId);
+    }
+
+    return this.projectRepository.save(project);
   }
 
   async findAll(): Promise<ProjectEntity[]> {
