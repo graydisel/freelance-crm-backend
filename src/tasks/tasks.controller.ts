@@ -1,7 +1,7 @@
 import {
   Body,
   Controller,
-  Get,
+  Get, Logger,
   Param,
   Patch,
   Post,
@@ -20,6 +20,8 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 
 @Controller('tasks')
 export class TasksController {
+  private readonly logger = new Logger(TasksController.name);
+
   constructor(private tasksService: TasksService) {}
 
   @Post()
@@ -45,6 +47,7 @@ export class TasksController {
     @Param('id') id: string,
     @Body('newStatus') newStatus: TaskStatus,
   ) {
+    this.logger.log(`PATCH tasks/${id}/status triggered with body: ${JSON.stringify({ newStatus })}`);
     return this.tasksService.updateStatus(id, newStatus);
   }
 
@@ -53,6 +56,7 @@ export class TasksController {
     @Param('id') id: string,
     @Body('newPriority') newPriority: TaskPriority,
   ) {
+    this.logger.log(`PATCH tasks/${id}/priority triggered with body: ${JSON.stringify({ newPriority })}`);
     return this.tasksService.updatePriority(id, newPriority);
   }
 

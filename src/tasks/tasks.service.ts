@@ -77,7 +77,13 @@ export class TasksService {
     taskId: string,
     newStatus: TaskStatus,
   ): Promise<TaskEntity> {
-    const task = await this.findOne(taskId);
+    const task = await this.taskRepository.findOne({
+      where: { id: taskId },
+    });
+
+    if (!task) {
+      throw new NotFoundException(`Task with id ${taskId} not found`);
+    }
 
     task.status = newStatus;
     return this.taskRepository.save(task);
@@ -87,7 +93,13 @@ export class TasksService {
     taskId: string,
     newPriority: TaskPriority,
   ): Promise<TaskEntity> {
-    const task = await this.findOne(taskId);
+    const task = await this.taskRepository.findOne({
+      where: { id: taskId },
+    });
+
+    if (!task) {
+      throw new NotFoundException(`Task with id ${taskId} not found`);
+    }
 
     task.priority = newPriority;
     return this.taskRepository.save(task);
