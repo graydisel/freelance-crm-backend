@@ -188,4 +188,24 @@ export class ProjectsService {
     }
     return project;
   }
+
+  async getProjectDetails(id: string) {
+    const project = await this.findOne(id);
+    return {
+      id: project.id,
+      name: project.name,
+      description: project.description,
+      status: project.status,
+      date: project.createdAt.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+      client: project.client ? {
+        id: project.client.id,
+        companyName: project.client.companyName,
+      } : null,
+      manager: project.manager ? {
+        id: project.manager.id,
+        fullName: `${project.manager.firstName} ${project.manager.lastName}`.trim(),
+      } : null,
+      tasksCount: project.tasks ? project.tasks.length : 0,
+    };
+  }
 }

@@ -38,6 +38,6 @@ export class ProjectsController {
   @Roles('admin', 'manager', 'client')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   findOne(@Param('id') id: string) {
-    return this.projectsService.findOne(id);
+    return this.projectsService.getProjectDetails(id);
   }
 }

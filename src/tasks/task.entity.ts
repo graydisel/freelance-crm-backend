@@ -14,42 +14,42 @@ import { UserEntity } from '../users/user.entity';
 @Entity('tasks')
 export class TaskEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ type: 'varchar', length: 255 })
-  title: string;
+  title!: string;
 
   @Column({ type: 'text', nullable: true })
-  description: string;
+  description!: string;
 
   @Column({
     type: 'enum',
     enum: TaskStatus,
     default: TaskStatus.TODO,
   })
-  status: TaskStatus;
+  status!: TaskStatus;
 
   @Column({
     type: 'enum',
     enum: TaskPriority,
     default: TaskPriority.MEDIUM,
   })
-  priority: TaskPriority;
+  priority!: TaskPriority;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @ManyToOne(() => ProjectEntity, (project) => project.tasks, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'project_id' })
-  project: ProjectEntity;
+  project!: ProjectEntity;
 
   @ManyToOne(() => UserEntity, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'assignee_id' })
-  assignee: UserEntity | null;
+  assignee!: UserEntity | null;
 
   @ManyToOne(() => UserEntity, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'creator_id' })
-  creator: UserEntity;
+  creator!: UserEntity;
 }

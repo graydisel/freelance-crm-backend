@@ -5,7 +5,6 @@ import {
   Param,
   Patch,
   Post,
-  Put,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -60,7 +59,7 @@ export class TasksController {
     return this.tasksService.updatePriority(id, newPriority);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @Roles('admin', 'manager', 'developer')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   updateTask(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto) {

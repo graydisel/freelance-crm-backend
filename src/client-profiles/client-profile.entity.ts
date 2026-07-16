@@ -6,9 +6,9 @@ import { ClientStatus } from './enums/client-status.enum';
 @Entity('client-profiles')
 export class ClientProfileEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
   @Column({ name: 'company_name', type: 'varchar', length: 255 })
-  companyName: string;
+  companyName!: string;
   @Column({
     name: 'contract_value',
     type: 'decimal',
@@ -16,23 +16,23 @@ export class ClientProfileEntity {
     scale: 2,
     default: 0,
   })
-  contractValue: number;
+  contractValue!: number;
   @Column({ name: 'contact_person', type: 'varchar', length: 50 })
-  contactPerson: string;
+  contactPerson!: string;
   @Column({ name: 'contact_email', type: 'varchar', length: 255 })
-  contactEmail: string;
+  contactEmail!: string;
   @Column({ type: 'varchar', length: 50, nullable: true })
-  phone: string;
+  phone!: string;
   @Column({
     type: 'enum',
     enum: ClientStatus,
     default: ClientStatus.ACTIVE,
   })
-  status: ClientStatus;
+  status!: ClientStatus;
   @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
+  createdAt!: Date;
   @OneToMany(() => UserEntity, (user) => user.client)
-  users: UserEntity[];
+  users!: UserEntity[];
   @OneToMany(() => ProjectEntity, (project) => project.client)
-  projects: ProjectEntity[];
+  projects!: ProjectEntity[];
 }

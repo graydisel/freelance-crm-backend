@@ -108,12 +108,16 @@ export class TasksService {
   async updateTask(taskId: string, dto: UpdateTaskDto): Promise<TaskEntity> {
     const task = await this.findOne(taskId);
 
-    if (dto.title) task.title = dto.title;
-    if (dto.description) task.description = dto.description;
+    if (dto.title && dto.title !== task.title) task.title = dto.title;
+    if (dto.description && dto.description !== task.description) task.description = dto.description;
 
-    if (dto.assigneeId) {
+    if (dto.assigneeId && dto.assigneeId !== task.assignee?.id) {
       task.assignee = await this.usersService.findOne(dto.assigneeId);
     }
+
+    if (dto.status && dto.status !== task.status) task.status = dto.status;
+    if (dto.priority && dto.priority !== task.priority) task.priority = dto.priority;
+
     return this.taskRepository.save(task);
   }
 }
