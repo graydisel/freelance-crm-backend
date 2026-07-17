@@ -36,6 +36,12 @@ export class TaskEntity {
   })
   priority!: TaskPriority;
 
+  @Column({
+    type: 'timestamp with time zone',
+    nullable: true,
+  })
+  deadline!: Date | null;
+
   @CreateDateColumn()
   createdAt!: Date;
 

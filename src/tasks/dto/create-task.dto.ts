@@ -1,7 +1,7 @@
 import { TaskStatus } from '../enums/task-status.enum';
 import { TaskPriority } from '../enums/task-priority.enum';
 
-import { IsString, IsOptional, IsEnum, IsUUID, IsNotEmpty } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsUUID, IsNotEmpty, IsDateString } from 'class-validator';
 
 export class CreateTaskDto {
   @IsString()
@@ -19,6 +19,10 @@ export class CreateTaskDto {
   @IsOptional()
   @IsEnum(TaskPriority)
   priority?: TaskPriority;
+
+  @IsOptional()
+  @IsDateString()
+  deadline?: string;
 
   @IsUUID()
   @IsNotEmpty()
