@@ -7,12 +7,14 @@ import {
   Post,
   Req,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { TaskStatus } from './enums/task-status.enum';
 import { TaskPriority } from './enums/task-priority.enum';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { GetFilteredTasksDto } from './dto/get-filtered-tasks.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -39,6 +41,11 @@ export class TasksController {
   @Get('project/:projectId')
   findByProject(@Param('projectId') projectId: string) {
     return this.tasksService.findByProject(projectId);
+  }
+
+  @Get('filter')
+  findFiltered(@Query() query: GetFilteredTasksDto) {
+    return this.tasksService.findFiltered(query);
   }
 
   @Patch(':id/status')

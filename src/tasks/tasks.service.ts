@@ -9,6 +9,7 @@ import { TaskStatus } from './enums/task-status.enum';
 import { UserEntity } from '../users/user.entity';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskPriority } from './enums/task-priority.enum';
+import {GetFilteredTasksDto} from "./dto/get-filtered-tasks.dto";
 
 @Injectable()
 export class TasksService {
@@ -49,6 +50,31 @@ export class TasksService {
         assignee: true,
       },
     });
+  }
+
+  async findFiltered(dto: GetFilteredTasksDto) {
+    const {priority, assigneeId, projectId} = dto;
+
+    const query = this.taskRepository
+    .createQueryBuilder('task')
+      .leftJoinAndSelect('task.assignee', 'assignee')
+      .leftJoinAndSelect('task.creator', 'creator')
+      .leftJoinAndSelect('task.project', 'project')
+      .where('task.project_id = :projectId', { projectId })
+
+    if(priority && priority !== 'all') {
+      query.andWhere('task.priority = :priority', { priority });
+    }
+
+    if(assigneeId) {
+      query.andWhere('task.assignee_id = :assigneeId', { assigneeId });
+    }
+
+    query.orderBy('task.createdAt', 'DESC');
+
+    const tasks = await query.getMany();
+
+    return tasks;
   }
 
   async findOne(id: string): Promise<TaskEntity> {
