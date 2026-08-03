@@ -16,6 +16,8 @@ import { RolesModule } from './roles/roles.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { RouteTimerInterceptor } from './interceptors/route-timer.interceptor';
 
 @Module({
   imports: [
@@ -45,6 +47,11 @@ import { DashboardModule } from './dashboard/dashboard.module';
     DashboardModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: RouteTimerInterceptor,
+    },
+  ],
 })
-export class AppModule {}
+export class AppModule { }
