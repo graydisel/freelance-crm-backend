@@ -1,7 +1,7 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ClientProfileEntity } from './client-profile.entity';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, In, FindOptionsWhere } from 'typeorm';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { GetClientsFilterDto } from "./dto/get-clients-filter.dto";
@@ -9,6 +9,7 @@ import { ClientStatus } from "./enums/client-status.enum";
 import { UsersService } from 'src/users/users.service';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { UserEntity } from 'src/users/user.entity';
+import { UpdateStatusDto } from './dto/update-status.dto';
 
 @Injectable()
 export class ClientProfilesService {
@@ -148,7 +149,7 @@ export class ClientProfilesService {
   async findPaginated(filterDto: GetClientsFilterDto) {
     const page = filterDto.page || 1;
     const limit = filterDto.limit || 10;
-    const { search, status } = filterDto;
+    const { search, statuses } = filterDto;
     const skip = (page - 1) * limit;
 
     const query = this.clientProfileRepository.createQueryBuilder('client');
@@ -162,8 +163,8 @@ export class ClientProfilesService {
     const archivedMetricsQuery = this.clientProfileRepository.createQueryBuilder('client')
       .where('client.status = :status', { status: ClientStatus.ARCHIVED });
 
-    if (status && status !== 'all') {
-      query.andWhere('client.status = :status', { status });
+    if (statuses && statuses.length > 0) {
+      query.andWhere('client.status IN (:...statuses)', { statuses });
     }
 
     if (search) {
@@ -255,5 +256,12 @@ export class ClientProfilesService {
     }
 
     return client;
+  }
+
+  async updateStatus(id: string, dto: UpdateStatusDto): Promise<ClientProfileEntity> {
+    const { status } = dto;
+    const client = await this.findOne(id);
+    client.status = status;
+    return this.clientProfileRepository.save(client);
   }
 }

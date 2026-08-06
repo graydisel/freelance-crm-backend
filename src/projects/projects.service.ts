@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ProjectEntity } from './project.entity';
 import { Repository } from 'typeorm';
@@ -207,5 +207,13 @@ export class ProjectsService {
       } : null,
       tasksCount: project.tasks ? project.tasks.length : 0,
     };
+  }
+
+  async deleteProject(id: string): Promise<void> {
+    const project = await this.findOne(id);
+    if (project.tasks && project.tasks.length > 0) {
+      throw new BadRequestException('Cannot delete a project that has linked tasks.');
+    }
+    await this.projectRepository.remove(project);
   }
 }

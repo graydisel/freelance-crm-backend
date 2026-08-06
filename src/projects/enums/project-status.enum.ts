@@ -4,4 +4,5 @@ export enum ProjectStatus {
   REVIEW = 'review',
   COMPLETED = 'completed',
   PAUSED = 'paused',
+  ARCHIVED = 'archived',
 }

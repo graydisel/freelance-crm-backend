@@ -1,6 +1,6 @@
-import {IsEnum, IsInt, IsOptional, IsString, Min} from "class-validator";
-import {Type} from "class-transformer";
-import {ClientStatus} from "../enums/client-status.enum";
+import { IsEnum, IsInt, IsOptional, IsString, Min, IsArray } from "class-validator";
+import { Type, Transform } from "class-transformer";
+import { ClientStatus } from "../enums/client-status.enum";
 
 export class GetClientsFilterDto {
   @IsOptional()
@@ -20,6 +20,12 @@ export class GetClientsFilterDto {
   search?: string;
 
   @IsOptional()
-  @IsEnum(ClientStatus)
-  status?: ClientStatus | 'all';
+  @IsArray()
+  @IsEnum(ClientStatus, { each: true })
+  @Transform(({ value }) => {
+    if (!value) return undefined;
+    if (Array.isArray(value)) return value;
+    return typeof value === 'string' ? value.split(',') : [value];
+  })
+  statuses?: ClientStatus[];
 }

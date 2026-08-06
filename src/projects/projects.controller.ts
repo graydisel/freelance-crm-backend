@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards, Delete } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -39,5 +39,12 @@ export class ProjectsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   findOne(@Param('id') id: string) {
     return this.projectsService.getProjectDetails(id);
+  }
+
+  @Delete(':id')
+  @Roles('admin', 'manager')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  deleteProject(@Param('id') id: string) {
+    return this.projectsService.deleteProject(id);
   }
 }

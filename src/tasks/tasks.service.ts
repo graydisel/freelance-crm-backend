@@ -146,4 +146,9 @@ export class TasksService {
 
     return this.taskRepository.save(task);
   }
+
+  async remove(taskId: string): Promise<void> {
+    const task = await this.findOne(taskId);
+    await this.taskRepository.remove(task);
+  }
 }

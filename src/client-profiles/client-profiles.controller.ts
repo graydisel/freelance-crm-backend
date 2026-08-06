@@ -38,4 +38,15 @@ export class ClientProfilesController {
   update(@Param('id') id: string, @Body() updateClientDto: UpdateClientDto) {
     return this.clientProfilesService.update(id, updateClientDto);
   }
+
+  @Patch(':id/status')
+  @Roles('admin', 'manager')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  updateStatus(
+    @Param('id') id: string,
+    @Body('status') status: string
+  ) {
+    // Ideally validate status with a DTO or Enum pipe, but for now passing it to the service
+    return this.clientProfilesService.updateStatus(id, status as any);
+  }
 }

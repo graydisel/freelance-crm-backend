@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Delete,
   Req,
   UseGuards,
   Query,
@@ -71,5 +72,13 @@ export class TasksController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   updateTask(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto) {
     return this.tasksService.updateTask(id, updateTaskDto);
+  }
+
+  @Delete(':id')
+  @Roles('admin', 'manager')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  removeTask(@Param('id') id: string) {
+    this.logger.log(`DELETE tasks/${id} triggered`);
+    return this.tasksService.remove(id);
   }
 }
