@@ -1,0 +1,51 @@
+name: freelance-crm-backend
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crm_nest_api
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - DB_HOST=postgres_db
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres_password
+      - DB_DATABASE=crm_db
+      - JWT_SECRET=SUPER_SECRET_KEY
+      - ROLES_KEY=superRolesKey
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: crm_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_password
+      POSTGRES_DB: crm_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d crm_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  adminer:
+    image: adminer:latest
+    container_name: crm_adminer
+    ports:
+      - "8081:8080"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

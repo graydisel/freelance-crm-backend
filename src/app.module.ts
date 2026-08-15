@@ -5,8 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProjectEntity } from './projects/project.entity';
 import { TaskEntity } from './tasks/task.entity';
 import { ProjectsModule } from './projects/projects.module';
-import * as process from 'node:process';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TasksModule } from './tasks/tasks.module';
 import { UserEntity } from './users/user.entity';
 import { ClientProfileEntity } from './client-profiles/client-profile.entity';
@@ -24,19 +23,45 @@ import { RouteTimerInterceptor } from './interceptors/route-timer.interceptor';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      url: process.env.POSTGRES_BASE,
-      entities: [
-        ProjectEntity,
-        TaskEntity,
-        UserEntity,
-        ClientProfileEntity,
-        RoleEntity,
-      ],
-      synchronize: false,
-      migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
-      ssl: true,
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const dbUrl = configService.get<string>('POSTGRES_BASE');
+        const enableSsl = configService.get<string>('DB_SSL') === 'true';
+
+        const commonEntities = [
+          ProjectEntity,
+          TaskEntity,
+          UserEntity,
+          ClientProfileEntity,
+          RoleEntity,
+        ];
+
+        if (dbUrl) {
+          return {
+            type: 'postgres',
+            url: dbUrl,
+            entities: commonEntities,
+            synchronize: false,
+            migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
+            ssl: enableSsl ? { rejectUnauthorized: false } : false,
+          };
+        }
+
+        return {
+          type: 'postgres',
+          host: configService.get<string>('DB_HOST', 'postgres_db'),
+          port: configService.get<number>('DB_PORT', 5432),
+          username: configService.get<string>('DB_USERNAME', 'postgres'),
+          password: configService.get<string>('DB_PASSWORD', 'postgres_password'),
+          database: configService.get<string>('DB_DATABASE', 'crm_db'),
+          entities: commonEntities,
+          synchronize: true,
+          migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
+          ssl: false,
+        };
+      },
     }),
     ProjectsModule,
     TasksModule,
@@ -47,7 +72,8 @@ import { RouteTimerInterceptor } from './interceptors/route-timer.interceptor';
     DashboardModule,
   ],
   controllers: [AppController],
-  providers: [AppService,
+  providers: [
+    AppService,
     {
       provide: APP_INTERCEPTOR,
       useClass: RouteTimerInterceptor,

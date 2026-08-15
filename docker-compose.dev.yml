@@ -1,0 +1,16 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    command: npx nodemon --watch src -e ts --exec "ts-node -r tsconfig-paths/register src/main.ts"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - TSC_WATCHFILE=UseFsEventsWithFallbackDynamicPolling
+      - TSC_WATCHDIRECTORY=DynamicPriorityPolling
