@@ -1,7 +1,8 @@
 import {
   Body,
   Controller,
-  Get, Logger,
+  Get,
+  Logger,
   Param,
   Patch,
   Post,
@@ -29,7 +30,10 @@ export class TasksController {
   @Post()
   @Roles('admin', 'manager')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  create(@Body() createTaskDto: CreateTaskDto, @Req() req: any) {
+  create(
+    @Body() createTaskDto: CreateTaskDto,
+    @Req() req: { user: { userId: string } },
+  ) {
     const creatorId = req.user.userId;
     return this.tasksService.create(createTaskDto, creatorId);
   }
@@ -54,7 +58,9 @@ export class TasksController {
     @Param('id') id: string,
     @Body('newStatus') newStatus: TaskStatus,
   ) {
-    this.logger.log(`PATCH tasks/${id}/status triggered with body: ${JSON.stringify({ newStatus })}`);
+    this.logger.log(
+      `PATCH tasks/${id}/status triggered with body: ${JSON.stringify({ newStatus })}`,
+    );
     return this.tasksService.updateStatus(id, newStatus);
   }
 
@@ -63,7 +69,9 @@ export class TasksController {
     @Param('id') id: string,
     @Body('newPriority') newPriority: TaskPriority,
   ) {
-    this.logger.log(`PATCH tasks/${id}/priority triggered with body: ${JSON.stringify({ newPriority })}`);
+    this.logger.log(
+      `PATCH tasks/${id}/priority triggered with body: ${JSON.stringify({ newPriority })}`,
+    );
     return this.tasksService.updatePriority(id, newPriority);
   }
 

@@ -54,7 +54,10 @@ import { RouteTimerInterceptor } from './interceptors/route-timer.interceptor';
           host: configService.get<string>('DB_HOST', 'postgres_db'),
           port: configService.get<number>('DB_PORT', 5432),
           username: configService.get<string>('DB_USERNAME', 'postgres'),
-          password: configService.get<string>('DB_PASSWORD', 'postgres_password'),
+          password: configService.get<string>(
+            'DB_PASSWORD',
+            'postgres_password',
+          ),
           database: configService.get<string>('DB_DATABASE', 'crm_db'),
           entities: commonEntities,
           synchronize: true,
@@ -80,4 +83,4 @@ import { RouteTimerInterceptor } from './interceptors/route-timer.interceptor';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

@@ -1,11 +1,15 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ClientProfileEntity } from './client-profile.entity';
-import { Repository, DataSource, In, FindOptionsWhere } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
-import { GetClientsFilterDto } from "./dto/get-clients-filter.dto";
-import { ClientStatus } from "./enums/client-status.enum";
+import { GetClientsFilterDto } from './dto/get-clients-filter.dto';
+import { ClientStatus } from './enums/client-status.enum';
 import { UsersService } from 'src/users/users.service';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { UserEntity } from 'src/users/user.entity';
@@ -19,122 +23,154 @@ export class ClientProfilesService {
 
     private readonly usersService: UsersService,
     private readonly dataSource: DataSource,
-  ) { }
+  ) {}
 
   async create(dto: CreateClientDto): Promise<ClientProfileEntity> {
     const emailNormalized = dto.contactEmail.toLowerCase().trim();
 
-    return await this.dataSource.transaction(async (transactionalEntityManager) => {
-      const newClientProfile = transactionalEntityManager.create(ClientProfileEntity, {
-        companyName: dto.companyName,
-        contractValue: dto.contractValue || 0,
-        contactPerson: dto.contactPerson,
-        contactEmail: emailNormalized,
-        phone: dto.phone,
-        status: dto.status || ClientStatus.LEAD,
-      });
+    return await this.dataSource.transaction(
+      async (transactionalEntityManager) => {
+        const newClientProfile = transactionalEntityManager.create(
+          ClientProfileEntity,
+          {
+            companyName: dto.companyName,
+            contractValue: dto.contractValue || 0,
+            contactPerson: dto.contactPerson,
+            contactEmail: emailNormalized,
+            phone: dto.phone,
+            status: dto.status || ClientStatus.LEAD,
+          },
+        );
 
-      const savedClient = await transactionalEntityManager.save(ClientProfileEntity, newClientProfile);
+        const savedClient = await transactionalEntityManager.save(
+          ClientProfileEntity,
+          newClientProfile,
+        );
 
-      const existingUser = await this.usersService.findByEmail(emailNormalized);
-
-      if (existingUser) {
-        const attachedCompanyId = existingUser.client?.id;
-
-        if (!attachedCompanyId) {
-
-          existingUser.client = { id: savedClient.id } as ClientProfileEntity;
-          await transactionalEntityManager.save(UserEntity, existingUser);
-
-          console.log(`[CRM] Current user ${emailNormalized} successfully attached to new company.`);
-
-        } else if (attachedCompanyId !== savedClient.id) {
-          throw new ConflictException(
-            `User with email ${emailNormalized} is already attached to another company.`
-          );
-        }
-
-      } else {
-        const temporaryPassword = Math.random().toString(36).slice(-8);
-        const nameParts = dto.contactPerson.split(' ');
-        const firstName = nameParts[0] || 'Client';
-        const lastName = nameParts[1] || 'Contact';
-
-        const createUserDto: CreateUserDto = {
-          email: emailNormalized,
-          passwordHash: temporaryPassword,
-          firstName,
-          lastName,
-          roleName: 'client',
-          companyId: savedClient.id,
-        };
-
-        await this.usersService.createUser(createUserDto, transactionalEntityManager);
-        console.log(`[CRM] Created user on the fly. Temporary password: ${temporaryPassword}`);
-      }
-      return savedClient;
-    });
-  }
-
-  async update(id: string, dto: UpdateClientDto): Promise<ClientProfileEntity> {
-    return await this.dataSource.transaction(async (transactionalEntityManager) => {
-
-      const client = await transactionalEntityManager.findOne(ClientProfileEntity, {
-        where: { id },
-        relations: {
-          users: true,
-        }
-      });
-
-      if (!client) {
-        throw new NotFoundException(`Client with ID ${id} not found`);
-      }
-
-      const oldEmail = client.contactEmail.toLowerCase().trim();
-      const newEmail = dto.contactEmail ? dto.contactEmail.toLowerCase().trim() : oldEmail;
-
-      if (dto.companyName) client.companyName = dto.companyName;
-      if (dto.contactPerson) client.contactPerson = dto.contactPerson;
-      if (dto.phone) client.phone = dto.phone;
-      if (dto.status) client.status = dto.status;
-      if (dto.contractValue !== undefined) client.contractValue = Number(dto.contractValue);
-
-      if (newEmail !== oldEmail) {
-        client.contactEmail = newEmail;
-
-        const existingUser = await this.usersService.findByEmail(newEmail);
+        const existingUser =
+          await this.usersService.findByEmail(emailNormalized);
 
         if (existingUser) {
           const attachedCompanyId = existingUser.client?.id;
 
           if (!attachedCompanyId) {
-            existingUser.client = { id: client.id } as ClientProfileEntity;
-            await transactionalEntityManager.save(existingUser);
-          } else if (attachedCompanyId !== client.id) {
-            throw new ConflictException(`User with email ${newEmail} is already attached to another company`);
+            existingUser.client = { id: savedClient.id } as ClientProfileEntity;
+            await transactionalEntityManager.save(UserEntity, existingUser);
+
+            console.log(
+              `[CRM] Current user ${emailNormalized} successfully attached to new company.`,
+            );
+          } else if (attachedCompanyId !== savedClient.id) {
+            throw new ConflictException(
+              `User with email ${emailNormalized} is already attached to another company.`,
+            );
           }
         } else {
           const temporaryPassword = Math.random().toString(36).slice(-8);
-          const nameParts = (dto.contactPerson || client.contactPerson).split(' ');
+          const nameParts = dto.contactPerson.split(' ');
           const firstName = nameParts[0] || 'Client';
           const lastName = nameParts[1] || 'Contact';
 
           const createUserDto: CreateUserDto = {
-            email: newEmail,
+            email: emailNormalized,
             passwordHash: temporaryPassword,
             firstName,
             lastName,
             roleName: 'client',
-            companyId: client.id,
+            companyId: savedClient.id,
           };
 
-          await this.usersService.createUser(createUserDto, transactionalEntityManager);
-          console.log(`[CRM Update] Created new user on-the-fly for ${newEmail}`);
+          await this.usersService.createUser(
+            createUserDto,
+            transactionalEntityManager,
+          );
+          console.log(
+            `[CRM] Created user on the fly. Temporary password: ${temporaryPassword}`,
+          );
         }
-      }
+        return savedClient;
+      },
+    );
+  }
 
-      return await transactionalEntityManager.save(ClientProfileEntity, client);
-    });
+  async update(id: string, dto: UpdateClientDto): Promise<ClientProfileEntity> {
+    return await this.dataSource.transaction(
+      async (transactionalEntityManager) => {
+        const client = await transactionalEntityManager.findOne(
+          ClientProfileEntity,
+          {
+            where: { id },
+            relations: {
+              users: true,
+            },
+          },
+        );
+
+        if (!client) {
+          throw new NotFoundException(`Client with ID ${id} not found`);
+        }
+
+        const oldEmail = client.contactEmail.toLowerCase().trim();
+        const newEmail = dto.contactEmail
+          ? dto.contactEmail.toLowerCase().trim()
+          : oldEmail;
+
+        if (dto.companyName) client.companyName = dto.companyName;
+        if (dto.contactPerson) client.contactPerson = dto.contactPerson;
+        if (dto.phone) client.phone = dto.phone;
+        if (dto.status) client.status = dto.status;
+        if (dto.contractValue !== undefined)
+          client.contractValue = Number(dto.contractValue);
+
+        if (newEmail !== oldEmail) {
+          client.contactEmail = newEmail;
+
+          const existingUser = await this.usersService.findByEmail(newEmail);
+
+          if (existingUser) {
+            const attachedCompanyId = existingUser.client?.id;
+
+            if (!attachedCompanyId) {
+              existingUser.client = { id: client.id } as ClientProfileEntity;
+              await transactionalEntityManager.save(existingUser);
+            } else if (attachedCompanyId !== client.id) {
+              throw new ConflictException(
+                `User with email ${newEmail} is already attached to another company`,
+              );
+            }
+          } else {
+            const temporaryPassword = Math.random().toString(36).slice(-8);
+            const nameParts = (dto.contactPerson || client.contactPerson).split(
+              ' ',
+            );
+            const firstName = nameParts[0] || 'Client';
+            const lastName = nameParts[1] || 'Contact';
+
+            const createUserDto: CreateUserDto = {
+              email: newEmail,
+              passwordHash: temporaryPassword,
+              firstName,
+              lastName,
+              roleName: 'client',
+              companyId: client.id,
+            };
+
+            await this.usersService.createUser(
+              createUserDto,
+              transactionalEntityManager,
+            );
+            console.log(
+              `[CRM Update] Created new user on-the-fly for ${newEmail}`,
+            );
+          }
+        }
+
+        return await transactionalEntityManager.save(
+          ClientProfileEntity,
+          client,
+        );
+      },
+    );
   }
 
   private getInitials(text: string): string {
@@ -154,13 +190,16 @@ export class ClientProfilesService {
 
     const query = this.clientProfileRepository.createQueryBuilder('client');
 
-    const activeMetricsQuery = this.clientProfileRepository.createQueryBuilder('client')
+    const activeMetricsQuery = this.clientProfileRepository
+      .createQueryBuilder('client')
       .where('client.status = :status', { status: ClientStatus.ACTIVE });
 
-    const leadsMetricsQuery = this.clientProfileRepository.createQueryBuilder('client')
+    const leadsMetricsQuery = this.clientProfileRepository
+      .createQueryBuilder('client')
       .where('client.status = :status', { status: ClientStatus.LEAD });
 
-    const archivedMetricsQuery = this.clientProfileRepository.createQueryBuilder('client')
+    const archivedMetricsQuery = this.clientProfileRepository
+      .createQueryBuilder('client')
       .where('client.status = :status', { status: ClientStatus.ARCHIVED });
 
     if (statuses && statuses.length > 0) {
@@ -168,7 +207,8 @@ export class ClientProfilesService {
     }
 
     if (search) {
-      const searchFilter = '(LOWER(client.companyName) LIKE LOWER(:search) OR LOWER(client.contactPerson) LIKE LOWER(:search) OR LOWER(client.contactEmail) LIKE LOWER(:search))';
+      const searchFilter =
+        '(LOWER(client.companyName) LIKE LOWER(:search) OR LOWER(client.contactPerson) LIKE LOWER(:search) OR LOWER(client.contactEmail) LIKE LOWER(:search))';
       const searchParam = { search: `%${search}%` };
 
       activeMetricsQuery.andWhere(searchFilter, searchParam);
@@ -184,16 +224,22 @@ export class ClientProfilesService {
     ]);
 
     const [globalActive, globalLeads, globalArchived] = await Promise.all([
-      this.clientProfileRepository.count({ where: { status: ClientStatus.ACTIVE } }),
-      this.clientProfileRepository.count({ where: { status: ClientStatus.LEAD } }),
-      this.clientProfileRepository.count({ where: { status: ClientStatus.ARCHIVED } }),
+      this.clientProfileRepository.count({
+        where: { status: ClientStatus.ACTIVE },
+      }),
+      this.clientProfileRepository.count({
+        where: { status: ClientStatus.LEAD },
+      }),
+      this.clientProfileRepository.count({
+        where: { status: ClientStatus.ARCHIVED },
+      }),
     ]);
 
-    const totalActiveRevenueResult = await this.clientProfileRepository
+    const totalActiveRevenueResult = (await this.clientProfileRepository
       .createQueryBuilder('client')
       .select('SUM(client.contractValue)', 'sum')
       .where('client.status = :status', { status: ClientStatus.ACTIVE })
-      .getRawOne();
+      .getRawOne()) as unknown as { sum: string | null } | undefined;
     const totalActiveRevenue = Number(totalActiveRevenueResult?.sum) || 0;
 
     query.orderBy('client.createdAt', 'DESC');
@@ -203,10 +249,13 @@ export class ClientProfilesService {
       .take(limit)
       .getManyAndCount();
 
-    const mappedData = clients.map(client => ({
+    const mappedData = clients.map((client) => ({
       id: client.id,
       companyName: client.companyName,
-      date: client.createdAt.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+      date: client.createdAt.toLocaleDateString('en-US', {
+        month: 'short',
+        year: 'numeric',
+      }),
       contactPerson: client.contactPerson,
       contactEmail: client.contactEmail,
       phone: client.phone || '—',
@@ -228,7 +277,7 @@ export class ClientProfilesService {
           activeCount,
           leadsCount,
           archivedCount,
-          totalCount: activeCount + leadsCount + archivedCount
+          totalCount: activeCount + leadsCount + archivedCount,
         },
 
         globalMetrics: {
@@ -236,8 +285,8 @@ export class ClientProfilesService {
           leadsCount: globalLeads,
           archivedCount: globalArchived,
           totalGlobal: globalActive + globalLeads + globalArchived,
-          totalActiveRevenue
-        }
+          totalActiveRevenue,
+        },
       },
     };
   }
@@ -248,7 +297,7 @@ export class ClientProfilesService {
       relations: {
         users: true,
         projects: true,
-      }
+      },
     });
 
     if (!client) {
@@ -258,7 +307,10 @@ export class ClientProfilesService {
     return client;
   }
 
-  async updateStatus(id: string, dto: UpdateStatusDto): Promise<ClientProfileEntity> {
+  async updateStatus(
+    id: string,
+    dto: UpdateStatusDto,
+  ): Promise<ClientProfileEntity> {
     const { status } = dto;
     const client = await this.findOne(id);
     client.status = status;

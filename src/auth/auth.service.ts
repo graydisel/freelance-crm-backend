@@ -9,15 +9,19 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(
+    email: string,
+    password: string,
+  ): Promise<Omit<UserEntity, 'passwordHash'> | null> {
     const user = await this.usersService.findByEmail(email);
 
     if (user) {
       const isMatch = await bcrypt.compare(password, user.passwordHash);
       if (isMatch) {
-        const { passwordHash: _, ...result } = user;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { passwordHash, ...result } = user;
         return result;
       }
     }

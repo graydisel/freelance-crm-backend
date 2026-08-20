@@ -12,7 +12,10 @@ import {
 export class CreateClientDto {
   @IsString()
   @IsNotEmpty({ message: 'Company name is required' })
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(
+    ({ value }: { value: any }) =>
+      (typeof value === 'string' ? value.trim() : value) as unknown,
+  )
   companyName!: string;
 
   @IsNumber()
@@ -20,17 +23,26 @@ export class CreateClientDto {
 
   @IsString()
   @IsNotEmpty({ message: 'Contact person is required' })
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(
+    ({ value }: { value: any }) =>
+      (typeof value === 'string' ? value.trim() : value) as unknown,
+  )
   contactPerson!: string;
 
   @IsEmail()
   @IsNotEmpty({ message: 'Contact email is required' })
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(
+    ({ value }: { value: any }) =>
+      (typeof value === 'string' ? value.trim() : value) as unknown,
+  )
   contactEmail!: string;
 
   @IsString()
   @IsNotEmpty({ message: 'Phone number is required' })
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(
+    ({ value }: { value: any }) =>
+      (typeof value === 'string' ? value.trim() : value) as unknown,
+  )
   phone?: string;
 
   @IsOptional()

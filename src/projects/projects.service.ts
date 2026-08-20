@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ProjectEntity } from './project.entity';
 import { Repository } from 'typeorm';
@@ -6,7 +10,7 @@ import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { UsersService } from '../users/users.service';
 import { ClientProfilesService } from '../client-profiles/client-profiles.service';
-import { GetProjectsFilterDto } from "./dto/get-projects-filter.dto";
+import { GetProjectsFilterDto } from './dto/get-projects-filter.dto';
 import { ProjectStatus } from './enums/project-status.enum';
 
 @Injectable()
@@ -16,7 +20,7 @@ export class ProjectsService {
     private readonly projectRepository: Repository<ProjectEntity>,
     private readonly usersService: UsersService,
     private readonly clientProfilesService: ClientProfilesService,
-  ) { }
+  ) {}
 
   async create(dto: CreateProjectDto): Promise<ProjectEntity> {
     const client = await this.clientProfilesService.findOne(dto.clientId);
@@ -99,27 +103,30 @@ export class ProjectsService {
     ]);
 
     const totalCount =
-      planningCount +
-      activeCount +
-      reviewCount +
-      completedCount +
-      pausedCount;
-
+      planningCount + activeCount + reviewCount + completedCount + pausedCount;
 
     const mappedData = projects.map((project) => ({
       id: project.id,
       name: project.name,
       description: project.description,
       status: project.status,
-      date: project.createdAt.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-      client: project.client ? {
-        id: project.client.id,
-        companyName: project.client.companyName,
-      } : null,
-      manager: project.manager ? {
-        id: project.manager.id,
-        fullName: `${project.manager.firstName} ${project.manager.lastName}`.trim(),
-      } : null,
+      date: project.createdAt.toLocaleDateString('en-US', {
+        month: 'short',
+        year: 'numeric',
+      }),
+      client: project.client
+        ? {
+            id: project.client.id,
+            companyName: project.client.companyName,
+          }
+        : null,
+      manager: project.manager
+        ? {
+            id: project.manager.id,
+            fullName:
+              `${project.manager.firstName} ${project.manager.lastName}`.trim(),
+          }
+        : null,
       tasksCount: project.tasks ? project.tasks.length : 0,
     }));
 
@@ -136,9 +143,9 @@ export class ProjectsService {
           reviewCount,
           completedCount,
           pausedCount,
-          totalCount
-        }
-      }
+          totalCount,
+        },
+      },
     };
   }
 
@@ -196,15 +203,23 @@ export class ProjectsService {
       name: project.name,
       description: project.description,
       status: project.status,
-      date: project.createdAt.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-      client: project.client ? {
-        id: project.client.id,
-        companyName: project.client.companyName,
-      } : null,
-      manager: project.manager ? {
-        id: project.manager.id,
-        fullName: `${project.manager.firstName} ${project.manager.lastName}`.trim(),
-      } : null,
+      date: project.createdAt.toLocaleDateString('en-US', {
+        month: 'short',
+        year: 'numeric',
+      }),
+      client: project.client
+        ? {
+            id: project.client.id,
+            companyName: project.client.companyName,
+          }
+        : null,
+      manager: project.manager
+        ? {
+            id: project.manager.id,
+            fullName:
+              `${project.manager.firstName} ${project.manager.lastName}`.trim(),
+          }
+        : null,
       tasksCount: project.tasks ? project.tasks.length : 0,
     };
   }
@@ -212,7 +227,9 @@ export class ProjectsService {
   async deleteProject(id: string): Promise<void> {
     const project = await this.findOne(id);
     if (project.tasks && project.tasks.length > 0) {
-      throw new BadRequestException('Cannot delete a project that has linked tasks.');
+      throw new BadRequestException(
+        'Cannot delete a project that has linked tasks.',
+      );
     }
     await this.projectRepository.remove(project);
   }

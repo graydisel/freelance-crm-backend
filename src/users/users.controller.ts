@@ -5,7 +5,7 @@ import { UserRoleEnum } from './enums/user-role.enum';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.createUser(createUserDto);
@@ -13,7 +13,7 @@ export class UsersController {
   @Get()
   findAll(
     @Query('search') search?: string,
-    @Query('role') role?: UserRoleEnum
+    @Query('role') role?: UserRoleEnum,
   ) {
     if (role) {
       return this.usersService.findAvailableByRole(search || '', role);

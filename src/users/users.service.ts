@@ -15,9 +15,12 @@ export class UsersService {
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
     private readonly rolesService: RolesService,
-  ) { }
+  ) {}
 
-  async createUser(createUserDto: CreateUserDto, manager?: EntityManager): Promise<UserEntity> {
+  async createUser(
+    createUserDto: CreateUserDto,
+    manager?: EntityManager,
+  ): Promise<UserEntity> {
     const validEmail = await this.userRepository.findOne({
       where: { email: createUserDto.email },
     });
@@ -37,7 +40,9 @@ export class UsersService {
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(createUserDto.passwordHash, salt);
 
-    const repo = manager ? manager.getRepository(UserEntity) : this.userRepository;
+    const repo = manager
+      ? manager.getRepository(UserEntity)
+      : this.userRepository;
 
     const userPayload: Partial<UserEntity> = {
       email: createUserDto.email,
@@ -48,7 +53,9 @@ export class UsersService {
     };
 
     if (createUserDto.companyId) {
-      userPayload.client = { id: createUserDto.companyId } as ClientProfileEntity;
+      userPayload.client = {
+        id: createUserDto.companyId,
+      } as ClientProfileEntity;
     }
 
     const newUser = repo.create(userPayload);
@@ -88,13 +95,9 @@ export class UsersService {
   async findAvailableByRole(search: string, roleName: UserRoleEnum) {
     const searchTerms = search ? search.trim() : '';
 
-    return this.userRepository.createQueryBuilder('user')
-      .select([
-        'user.id',
-        'user.firstName',
-        'user.lastName',
-        'user.email'
-      ])
+    return this.userRepository
+      .createQueryBuilder('user')
+      .select(['user.id', 'user.firstName', 'user.lastName', 'user.email'])
       .leftJoin('user.role', 'roleRelation')
       .leftJoin('user.client', 'clientRelation')
       .addSelect(['roleRelation.id', 'roleRelation.name'])
@@ -102,7 +105,7 @@ export class UsersService {
       .andWhere('clientRelation.id IS NULL')
       .andWhere(
         '(user.firstName ILIKE :search OR user.lastName ILIKE :search OR user.email ILIKE :search)',
-        { search: `%${searchTerms}%` }
+        { search: `%${searchTerms}%` },
       )
       .orderBy('user.firstName', 'ASC')
       .limit(5)

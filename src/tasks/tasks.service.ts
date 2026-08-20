@@ -9,7 +9,7 @@ import { TaskStatus } from './enums/task-status.enum';
 import { UserEntity } from '../users/user.entity';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskPriority } from './enums/task-priority.enum';
-import {GetFilteredTasksDto} from "./dto/get-filtered-tasks.dto";
+import { GetFilteredTasksDto } from './dto/get-filtered-tasks.dto';
 
 @Injectable()
 export class TasksService {
@@ -53,20 +53,20 @@ export class TasksService {
   }
 
   async findFiltered(dto: GetFilteredTasksDto) {
-    const {priority, assigneeId, projectId} = dto;
+    const { priority, assigneeId, projectId } = dto;
 
     const query = this.taskRepository
-    .createQueryBuilder('task')
+      .createQueryBuilder('task')
       .leftJoinAndSelect('task.assignee', 'assignee')
       .leftJoinAndSelect('task.creator', 'creator')
       .leftJoinAndSelect('task.project', 'project')
-      .where('task.project_id = :projectId', { projectId })
+      .where('task.project_id = :projectId', { projectId });
 
-    if(priority && priority !== 'all') {
+    if (priority && priority !== 'all') {
       query.andWhere('task.priority = :priority', { priority });
     }
 
-    if(assigneeId) {
+    if (assigneeId) {
       query.andWhere('task.assignee_id = :assigneeId', { assigneeId });
     }
 
@@ -135,14 +135,16 @@ export class TasksService {
     const task = await this.findOne(taskId);
 
     if (dto.title && dto.title !== task.title) task.title = dto.title;
-    if (dto.description && dto.description !== task.description) task.description = dto.description;
+    if (dto.description && dto.description !== task.description)
+      task.description = dto.description;
 
     if (dto.assigneeId && dto.assigneeId !== task.assignee?.id) {
       task.assignee = await this.usersService.findOne(dto.assigneeId);
     }
 
     if (dto.status && dto.status !== task.status) task.status = dto.status;
-    if (dto.priority && dto.priority !== task.priority) task.priority = dto.priority;
+    if (dto.priority && dto.priority !== task.priority)
+      task.priority = dto.priority;
 
     return this.taskRepository.save(task);
   }

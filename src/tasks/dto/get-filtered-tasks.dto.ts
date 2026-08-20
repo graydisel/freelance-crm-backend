@@ -1,5 +1,11 @@
-import {IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID} from "class-validator";
-import {TaskPriority} from "../enums/task-priority.enum";
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
+import { TaskPriority } from '../enums/task-priority.enum';
 
 export class GetFilteredTasksDto {
   @IsNotEmpty()

@@ -1,8 +1,17 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { CreateClientDto } from './dto/create-client.dto';
 import { ClientProfilesService } from './client-profiles.service';
-import { Roles } from "../auth/decorators/roles.decorator";
-import { GetClientsFilterDto } from "./dto/get-clients-filter.dto";
+import { Roles } from '../auth/decorators/roles.decorator';
+import { GetClientsFilterDto } from './dto/get-clients-filter.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { UpdateClientDto } from './dto/update-client.dto';
@@ -10,7 +19,7 @@ import { UpdateStatusDto } from './dto/update-status.dto';
 
 @Controller('client')
 export class ClientProfilesController {
-  constructor(private readonly clientProfilesService: ClientProfilesService) { }
+  constructor(private readonly clientProfilesService: ClientProfilesService) {}
 
   @Post()
   @Roles('admin', 'manager')
@@ -45,7 +54,7 @@ export class ClientProfilesController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   updateStatus(
     @Param('id') id: string,
-    @Body() updateStatusDto: UpdateStatusDto
+    @Body() updateStatusDto: UpdateStatusDto,
   ) {
     return this.clientProfilesService.updateStatus(id, updateStatusDto);
   }
