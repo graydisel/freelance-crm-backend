@@ -8,6 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { EntityManager } from 'typeorm';
 import { ClientProfileEntity } from 'src/client-profiles/client-profile.entity';
 import { UserRoleEnum } from './enums/user-role.enum';
+import { UserProfileEntity } from 'src/user-profiles/user-profiles.entity';
 
 @Injectable()
 export class UsersService {
@@ -15,7 +16,7 @@ export class UsersService {
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
     private readonly rolesService: RolesService,
-  ) {}
+  ) { }
 
   async createUser(
     createUserDto: CreateUserDto,
@@ -47,8 +48,10 @@ export class UsersService {
     const userPayload: Partial<UserEntity> = {
       email: createUserDto.email,
       passwordHash: hashedPassword,
-      firstName: createUserDto.firstName,
-      lastName: createUserDto.lastName,
+      profile: {
+        firstName: createUserDto.firstName,
+        lastName: createUserDto.lastName,
+      } as UserProfileEntity,
       role: validRole,
     };
 
@@ -67,6 +70,7 @@ export class UsersService {
       relations: {
         role: true,
         client: true,
+        profile: true,
       },
     });
   }
@@ -77,6 +81,7 @@ export class UsersService {
       relations: {
         role: true,
         client: true,
+        profile: true,
       },
     });
     if (!user) {
@@ -88,7 +93,7 @@ export class UsersService {
   async findByEmail(email: string): Promise<UserEntity | null> {
     return await this.userRepository.findOne({
       where: { email: email.toLowerCase().trim() },
-      relations: { role: true, client: true },
+      relations: { role: true, client: true, profile: true },
     });
   }
 
@@ -97,17 +102,18 @@ export class UsersService {
 
     return this.userRepository
       .createQueryBuilder('user')
-      .select(['user.id', 'user.firstName', 'user.lastName', 'user.email'])
+      .select(['user.id', 'user.email'])
       .leftJoin('user.role', 'roleRelation')
       .leftJoin('user.client', 'clientRelation')
-      .addSelect(['roleRelation.id', 'roleRelation.name'])
+      .leftJoin('user.profile', 'profileRelation')
+      .addSelect(['roleRelation.id', 'roleRelation.name', 'profileRelation.firstName', 'profileRelation.lastName'])
       .where('roleRelation.name = :roleName', { roleName })
       .andWhere('clientRelation.id IS NULL')
       .andWhere(
-        '(user.firstName ILIKE :search OR user.lastName ILIKE :search OR user.email ILIKE :search)',
+        '(profileRelation.firstName ILIKE :search OR profileRelation.lastName ILIKE :search OR user.email ILIKE :search)',
         { search: `%${searchTerms}%` },
       )
-      .orderBy('user.firstName', 'ASC')
+      .orderBy('profileRelation.firstName', 'ASC')
       .limit(5)
       .getMany();
   }

@@ -12,6 +12,7 @@ import { UsersService } from '../users/users.service';
 import { ClientProfilesService } from '../client-profiles/client-profiles.service';
 import { GetProjectsFilterDto } from './dto/get-projects-filter.dto';
 import { ProjectStatus } from './enums/project-status.enum';
+import { UserProfilesService } from 'src/user-profiles/user-profiles.service';
 
 @Injectable()
 export class ProjectsService {
@@ -19,8 +20,9 @@ export class ProjectsService {
     @InjectRepository(ProjectEntity)
     private readonly projectRepository: Repository<ProjectEntity>,
     private readonly usersService: UsersService,
+    private readonly userProfileService: UserProfilesService,
     private readonly clientProfilesService: ClientProfilesService,
-  ) {}
+  ) { }
 
   async create(dto: CreateProjectDto): Promise<ProjectEntity> {
     const client = await this.clientProfilesService.findOne(dto.clientId);
@@ -116,16 +118,16 @@ export class ProjectsService {
       }),
       client: project.client
         ? {
-            id: project.client.id,
-            companyName: project.client.companyName,
-          }
+          id: project.client.id,
+          companyName: project.client.companyName,
+        }
         : null,
       manager: project.manager
         ? {
-            id: project.manager.id,
-            fullName:
-              `${project.manager.firstName} ${project.manager.lastName}`.trim(),
-          }
+          id: project.manager.id,
+          fullName:
+            `${project.manager.firstName} ${project.manager.lastName}`.trim(),
+        }
         : null,
       tasksCount: project.tasks ? project.tasks.length : 0,
     }));
@@ -165,9 +167,20 @@ export class ProjectsService {
       project.client = await this.clientProfilesService.findOne(dto.clientId);
     }
     if (dto.managerId) {
-      project.manager = await this.usersService.findOne(dto.managerId);
+      project.manager = await this.userProfileService.getProfileByUserId(dto.managerId);
     }
 
+    return this.projectRepository.save(project);
+  }
+
+  async updateStatus(id: string, status: ProjectStatus): Promise<ProjectEntity> {
+    const project = await this.projectRepository.findOne({
+      where: { id }
+    });
+    if (!project) {
+      throw new NotFoundException(`Project with id: ${id} not found `);
+    }
+    project.status = status;
     return this.projectRepository.save(project);
   }
 
@@ -209,16 +222,16 @@ export class ProjectsService {
       }),
       client: project.client
         ? {
-            id: project.client.id,
-            companyName: project.client.companyName,
-          }
+          id: project.client.id,
+          companyName: project.client.companyName,
+        }
         : null,
       manager: project.manager
         ? {
-            id: project.manager.id,
-            fullName:
-              `${project.manager.firstName} ${project.manager.lastName}`.trim(),
-          }
+          id: project.manager.id,
+          fullName:
+            `${project.manager.firstName} ${project.manager.lastName}`.trim(),
+        }
         : null,
       tasksCount: project.tasks ? project.tasks.length : 0,
     };

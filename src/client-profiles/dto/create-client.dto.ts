@@ -33,7 +33,7 @@ export class CreateClientDto {
   @IsNotEmpty({ message: 'Contact email is required' })
   @Transform(
     ({ value }: { value: any }) =>
-      (typeof value === 'string' ? value.trim() : value) as unknown,
+      (typeof value === 'string' ? value.toLowerCase().trim() : value) as unknown,
   )
   contactEmail!: string;
 

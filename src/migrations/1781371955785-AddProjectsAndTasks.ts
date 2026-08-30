@@ -4,8 +4,8 @@ export class AddProjectsAndTasks1781371955785 implements MigrationInterface {
   name = 'AddProjectsAndTasks1781371955785';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`ALTER TABLE "projects" DROP COLUMN "client_name"`);
-    await queryRunner.query(`ALTER TABLE "projects" DROP COLUMN "budget"`);
+    await queryRunner.query(`ALTER TABLE "projects" DROP COLUMN IF EXISTS "client_name"`);
+    await queryRunner.query(`ALTER TABLE "projects" DROP COLUMN IF EXISTS "budget"`);
     await queryRunner.query(
       `CREATE TYPE "public"."tasks_priority_enum" AS ENUM('low', 'medium', 'high')`,
     );

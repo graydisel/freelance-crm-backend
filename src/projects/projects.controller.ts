@@ -8,18 +8,26 @@ import {
   Query,
   UseGuards,
   Delete,
+  Logger,
 } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { UpdateProjectStatusDto } from './dto/update-project-status.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { GetProjectsFilterDto } from './dto/get-projects-filter.dto';
+import { ProjectStatus } from './enums/project-status.enum';
 
 @Controller('projects')
 export class ProjectsController {
-  constructor(private readonly projectsService: ProjectsService) {}
+  private readonly logger = new Logger(ProjectsController.name);
+
+  constructor(
+    private readonly projectsService: ProjectsService,
+  ) { }
+
   @Get()
   @Roles('admin', 'manager', 'client')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -42,6 +50,14 @@ export class ProjectsController {
     @Body() updateProjectDto: UpdateProjectDto,
   ) {
     return this.projectsService.update(id, updateProjectDto);
+  }
+
+  @Patch(':id/status')
+  @Roles('admin', 'manager')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  updateStatus(@Param('id') id: string, @Body() updateProjectStatusDto: UpdateProjectStatusDto) {
+    this.logger.log(`PATCH /projects/${id}/status triggered with body: ${JSON.stringify(updateProjectStatusDto)}`);
+    return this.projectsService.updateStatus(id, updateProjectStatusDto.newStatus);
   }
 
   @Get(':id')

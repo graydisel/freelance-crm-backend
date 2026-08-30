@@ -1,9 +1,4 @@
-import { ProjectStatus } from '../enums/project-status.enum';
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateProjectDto } from './create-project.dto';
 
-export class UpdateProjectDto {
-  name?: string;
-  description?: string;
-  status?: ProjectStatus;
-  clientId?: string;
-  managerId?: string;
-}
+export class UpdateProjectDto extends PartialType(CreateProjectDto) {}

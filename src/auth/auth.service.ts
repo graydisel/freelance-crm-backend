@@ -40,8 +40,12 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        profile: user.profile
+          ? {
+              firstName: user.profile.firstName,
+              lastName: user.profile.lastName,
+            }
+          : null,
         role: user.role?.name,
       },
     };

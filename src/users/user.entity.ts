@@ -4,10 +4,13 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { ClientProfileEntity } from '../client-profiles/client-profile.entity';
 import { RoleEntity } from '../roles/role.entity';
+import { UserProfileEntity } from '../user-profiles/user-profiles.entity';
+
 
 @Entity('users')
 export class UserEntity {
@@ -17,10 +20,9 @@ export class UserEntity {
   email: string;
   @Column({ name: 'password_hash', type: 'varchar', length: 255 })
   passwordHash: string;
-  @Column({ name: 'first_name', type: 'varchar', length: 100 })
-  firstName: string;
-  @Column({ name: 'last_name', type: 'varchar', length: 100 })
-  lastName: string;
+  @OneToOne(() => UserProfileEntity, (profile) => profile.user, { cascade: true })
+  profile: UserProfileEntity;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
   @ManyToOne(() => RoleEntity, (role) => role.users)

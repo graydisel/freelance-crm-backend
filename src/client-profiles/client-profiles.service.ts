@@ -23,10 +23,10 @@ export class ClientProfilesService {
 
     private readonly usersService: UsersService,
     private readonly dataSource: DataSource,
-  ) {}
+  ) { }
 
   async create(dto: CreateClientDto): Promise<ClientProfileEntity> {
-    const emailNormalized = dto.contactEmail.toLowerCase().trim();
+    const email = dto.contactEmail;
 
     return await this.dataSource.transaction(
       async (transactionalEntityManager) => {
@@ -36,7 +36,7 @@ export class ClientProfilesService {
             companyName: dto.companyName,
             contractValue: dto.contractValue || 0,
             contactPerson: dto.contactPerson,
-            contactEmail: emailNormalized,
+            contactEmail: email,
             phone: dto.phone,
             status: dto.status || ClientStatus.LEAD,
           },
@@ -48,7 +48,7 @@ export class ClientProfilesService {
         );
 
         const existingUser =
-          await this.usersService.findByEmail(emailNormalized);
+          await this.usersService.findByEmail(email);
 
         if (existingUser) {
           const attachedCompanyId = existingUser.client?.id;
@@ -58,11 +58,11 @@ export class ClientProfilesService {
             await transactionalEntityManager.save(UserEntity, existingUser);
 
             console.log(
-              `[CRM] Current user ${emailNormalized} successfully attached to new company.`,
+              `[CRM] Current user ${email} successfully attached to new company.`,
             );
           } else if (attachedCompanyId !== savedClient.id) {
             throw new ConflictException(
-              `User with email ${emailNormalized} is already attached to another company.`,
+              `User with email ${email} is already attached to another company.`,
             );
           }
         } else {
@@ -72,7 +72,7 @@ export class ClientProfilesService {
           const lastName = nameParts[1] || 'Contact';
 
           const createUserDto: CreateUserDto = {
-            email: emailNormalized,
+            email: email,
             passwordHash: temporaryPassword,
             firstName,
             lastName,

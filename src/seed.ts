@@ -10,6 +10,7 @@ import { TaskStatus } from './tasks/enums/task-status.enum';
 import { TaskPriority } from './tasks/enums/task-priority.enum';
 import * as dotenv from 'dotenv';
 import { ClientStatus } from './client-profiles/enums/client-status.enum';
+import { UserProfileEntity } from './user-profiles/user-profiles.entity';
 
 dotenv.config();
 
@@ -34,8 +35,9 @@ async function run() {
             ClientProfileEntity,
             ProjectEntity,
             TaskEntity,
+            UserProfileEntity,
           ],
-          synchronize: false,
+          synchronize: true,
         }
       : {
           type: 'postgres',
@@ -51,8 +53,9 @@ async function run() {
             ClientProfileEntity,
             ProjectEntity,
             TaskEntity,
+            UserProfileEntity,
           ],
-          synchronize: false,
+          synchronize: true,
         },
   );
 
@@ -90,13 +93,15 @@ async function run() {
     console.log('👤 Checking system users...');
     const passwordHash = await bcrypt.hash('password123', 10);
 
-    let admin = await userRepo.findOne({ where: { email: 'admin@crm.com' } });
+    let admin = await userRepo.findOne({ where: { email: 'admin@crm.com' }, relations: { profile: true } });
     if (!admin) {
       admin = await userRepo.save(
         userRepo.create({
           email: 'admin@crm.com',
-          firstName: 'System',
-          lastName: 'Administrator',
+          profile: {
+            firstName: 'System',
+            lastName: 'Administrator',
+          } as any,
           passwordHash,
           role: adminRole,
         }),
@@ -105,13 +110,16 @@ async function run() {
 
     let manager = await userRepo.findOne({
       where: { email: 'manager@crm.com' },
+      relations: { profile: true }
     });
     if (!manager) {
       manager = await userRepo.save(
         userRepo.create({
           email: 'manager@crm.com',
-          firstName: 'Elena',
-          lastName: 'Smirnova',
+          profile: {
+            firstName: 'Elena',
+            lastName: 'Smirnova',
+          } as any,
           passwordHash,
           role: managerRole,
         }),
@@ -120,26 +128,31 @@ async function run() {
 
     let developer = await userRepo.findOne({
       where: { email: 'developer@crm.com' },
+      relations: { profile: true }
     });
     if (!developer) {
       developer = await userRepo.save(
         userRepo.create({
           email: 'developer@crm.com',
-          firstName: 'Alex',
-          lastName: 'Developer',
+          profile: {
+            firstName: 'Alex',
+            lastName: 'Developer',
+          } as any,
           passwordHash,
           role: developerRole,
         }),
       );
     }
 
-    let client = await userRepo.findOne({ where: { email: 'client@crm.com' } });
+    let client = await userRepo.findOne({ where: { email: 'client@crm.com' }, relations: { profile: true } });
     if (!client) {
       client = await userRepo.save(
         userRepo.create({
           email: 'client@crm.com',
-          firstName: 'Elon',
-          lastName: 'Musk',
+          profile: {
+            firstName: 'Elon',
+            lastName: 'Musk',
+          } as any,
           passwordHash,
           role: clientRole,
         }),
@@ -332,7 +345,7 @@ async function run() {
           'Refactoring of core modules and modern database migrations',
         status: ProjectStatus.ACTIVE,
         client: helix,
-        manager: manager,
+        manager: manager.profile,
       }),
     );
 
@@ -342,7 +355,7 @@ async function run() {
         description: 'High-load video streaming platform development',
         status: ProjectStatus.ACTIVE,
         client: dune,
-        manager: manager,
+        manager: manager.profile,
       }),
     );
 
@@ -353,7 +366,7 @@ async function run() {
           'Integrating Neural Networks for Business Intelligence analytics',
         status: ProjectStatus.PLANNING,
         client: quantum,
-        manager: manager,
+        manager: manager.profile,
       }),
     );
 
@@ -363,7 +376,7 @@ async function run() {
         description: 'Internal audit and strict security enterprise software',
         status: ProjectStatus.COMPLETED,
         client: vertex,
-        manager: manager,
+        manager: manager.profile,
       }),
     );
 
@@ -373,7 +386,7 @@ async function run() {
         description: 'Real-time telemetry and GPS navigation route optimizer',
         status: ProjectStatus.ACTIVE,
         client: stellar,
-        manager: manager,
+        manager: manager.profile,
       }),
     );
 
@@ -384,7 +397,7 @@ async function run() {
           'High-frequency transaction engine with fraud prevention layer',
         status: ProjectStatus.PLANNING,
         client: horizon,
-        manager: manager,
+        manager: manager.profile,
       }),
     );
 

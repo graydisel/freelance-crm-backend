@@ -17,6 +17,8 @@ import { AuthModule } from './auth/auth.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { RouteTimerInterceptor } from './interceptors/route-timer.interceptor';
+import { UserProfilesModule } from './user-profiles/user-profiles.module';
+import { UserProfileEntity } from './user-profiles/user-profiles.entity';
 
 @Module({
   imports: [
@@ -36,6 +38,7 @@ import { RouteTimerInterceptor } from './interceptors/route-timer.interceptor';
           UserEntity,
           ClientProfileEntity,
           RoleEntity,
+          UserProfileEntity,
         ];
 
         if (dbUrl) {
@@ -73,6 +76,7 @@ import { RouteTimerInterceptor } from './interceptors/route-timer.interceptor';
     UsersModule,
     AuthModule,
     DashboardModule,
+    UserProfilesModule,
   ],
   controllers: [AppController],
   providers: [
@@ -83,4 +87,4 @@ import { RouteTimerInterceptor } from './interceptors/route-timer.interceptor';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }
