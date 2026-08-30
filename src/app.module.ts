@@ -87,4 +87,4 @@ import { UserProfileEntity } from './user-profiles/user-profiles.entity';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

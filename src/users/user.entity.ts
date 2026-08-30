@@ -11,7 +11,6 @@ import { ClientProfileEntity } from '../client-profiles/client-profile.entity';
 import { RoleEntity } from '../roles/role.entity';
 import { UserProfileEntity } from '../user-profiles/user-profiles.entity';
 
-
 @Entity('users')
 export class UserEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -20,7 +19,9 @@ export class UserEntity {
   email: string;
   @Column({ name: 'password_hash', type: 'varchar', length: 255 })
   passwordHash: string;
-  @OneToOne(() => UserProfileEntity, (profile) => profile.user, { cascade: true })
+  @OneToOne(() => UserProfileEntity, (profile) => profile.user, {
+    cascade: true,
+  })
   profile: UserProfileEntity;
 
   @CreateDateColumn({ name: 'created_at' })

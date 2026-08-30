@@ -93,7 +93,10 @@ async function run() {
     console.log('👤 Checking system users...');
     const passwordHash = await bcrypt.hash('password123', 10);
 
-    let admin = await userRepo.findOne({ where: { email: 'admin@crm.com' }, relations: { profile: true } });
+    let admin = await userRepo.findOne({
+      where: { email: 'admin@crm.com' },
+      relations: { profile: true },
+    });
     if (!admin) {
       admin = await userRepo.save(
         userRepo.create({
@@ -101,7 +104,7 @@ async function run() {
           profile: {
             firstName: 'System',
             lastName: 'Administrator',
-          } as any,
+          },
           passwordHash,
           role: adminRole,
         }),
@@ -110,7 +113,7 @@ async function run() {
 
     let manager = await userRepo.findOne({
       where: { email: 'manager@crm.com' },
-      relations: { profile: true }
+      relations: { profile: true },
     });
     if (!manager) {
       manager = await userRepo.save(
@@ -119,7 +122,7 @@ async function run() {
           profile: {
             firstName: 'Elena',
             lastName: 'Smirnova',
-          } as any,
+          },
           passwordHash,
           role: managerRole,
         }),
@@ -128,7 +131,7 @@ async function run() {
 
     let developer = await userRepo.findOne({
       where: { email: 'developer@crm.com' },
-      relations: { profile: true }
+      relations: { profile: true },
     });
     if (!developer) {
       developer = await userRepo.save(
@@ -137,14 +140,17 @@ async function run() {
           profile: {
             firstName: 'Alex',
             lastName: 'Developer',
-          } as any,
+          },
           passwordHash,
           role: developerRole,
         }),
       );
     }
 
-    let client = await userRepo.findOne({ where: { email: 'client@crm.com' }, relations: { profile: true } });
+    let client = await userRepo.findOne({
+      where: { email: 'client@crm.com' },
+      relations: { profile: true },
+    });
     if (!client) {
       client = await userRepo.save(
         userRepo.create({
@@ -152,7 +158,7 @@ async function run() {
           profile: {
             firstName: 'Elon',
             lastName: 'Musk',
-          } as any,
+          },
           passwordHash,
           role: clientRole,
         }),

@@ -22,7 +22,7 @@ export class ProjectsService {
     private readonly usersService: UsersService,
     private readonly userProfileService: UserProfilesService,
     private readonly clientProfilesService: ClientProfilesService,
-  ) { }
+  ) {}
 
   async create(dto: CreateProjectDto): Promise<ProjectEntity> {
     const client = await this.clientProfilesService.findOne(dto.clientId);
@@ -118,16 +118,16 @@ export class ProjectsService {
       }),
       client: project.client
         ? {
-          id: project.client.id,
-          companyName: project.client.companyName,
-        }
+            id: project.client.id,
+            companyName: project.client.companyName,
+          }
         : null,
       manager: project.manager
         ? {
-          id: project.manager.id,
-          fullName:
-            `${project.manager.firstName} ${project.manager.lastName}`.trim(),
-        }
+            id: project.manager.id,
+            fullName:
+              `${project.manager.firstName} ${project.manager.lastName}`.trim(),
+          }
         : null,
       tasksCount: project.tasks ? project.tasks.length : 0,
     }));
@@ -167,15 +167,20 @@ export class ProjectsService {
       project.client = await this.clientProfilesService.findOne(dto.clientId);
     }
     if (dto.managerId) {
-      project.manager = await this.userProfileService.getProfileByUserId(dto.managerId);
+      project.manager = await this.userProfileService.getProfileByUserId(
+        dto.managerId,
+      );
     }
 
     return this.projectRepository.save(project);
   }
 
-  async updateStatus(id: string, status: ProjectStatus): Promise<ProjectEntity> {
+  async updateStatus(
+    id: string,
+    status: ProjectStatus,
+  ): Promise<ProjectEntity> {
     const project = await this.projectRepository.findOne({
-      where: { id }
+      where: { id },
     });
     if (!project) {
       throw new NotFoundException(`Project with id: ${id} not found `);
@@ -222,16 +227,16 @@ export class ProjectsService {
       }),
       client: project.client
         ? {
-          id: project.client.id,
-          companyName: project.client.companyName,
-        }
+            id: project.client.id,
+            companyName: project.client.companyName,
+          }
         : null,
       manager: project.manager
         ? {
-          id: project.manager.id,
-          fullName:
-            `${project.manager.firstName} ${project.manager.lastName}`.trim(),
-        }
+            id: project.manager.id,
+            fullName:
+              `${project.manager.firstName} ${project.manager.lastName}`.trim(),
+          }
         : null,
       tasksCount: project.tasks ? project.tasks.length : 0,
     };

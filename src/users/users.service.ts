@@ -16,7 +16,7 @@ export class UsersService {
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
     private readonly rolesService: RolesService,
-  ) { }
+  ) {}
 
   async createUser(
     createUserDto: CreateUserDto,
@@ -106,7 +106,12 @@ export class UsersService {
       .leftJoin('user.role', 'roleRelation')
       .leftJoin('user.client', 'clientRelation')
       .leftJoin('user.profile', 'profileRelation')
-      .addSelect(['roleRelation.id', 'roleRelation.name', 'profileRelation.firstName', 'profileRelation.lastName'])
+      .addSelect([
+        'roleRelation.id',
+        'roleRelation.name',
+        'profileRelation.firstName',
+        'profileRelation.lastName',
+      ])
       .where('roleRelation.name = :roleName', { roleName })
       .andWhere('clientRelation.id IS NULL')
       .andWhere(

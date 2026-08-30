@@ -10,4 +10,4 @@ import { UserProfilesController } from './user-profiles.controller';
   controllers: [UserProfilesController],
   exports: [UserProfilesService],
 })
-export class UserProfilesModule { }
+export class UserProfilesModule {}

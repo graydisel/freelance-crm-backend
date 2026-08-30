@@ -2,14 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserProfileEntity } from './user-profiles.entity';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 
 @Injectable()
 export class UserProfilesService {
   constructor(
     @InjectRepository(UserProfileEntity)
     private readonly userProfilesRepository: Repository<UserProfileEntity>,
-  ) { }
+  ) {}
 
   async getProfileByUserId(userId: string): Promise<UserProfileEntity> {
     const profile = await this.userProfilesRepository.findOne({
@@ -23,7 +23,7 @@ export class UserProfilesService {
 
   async updateProfile(
     userId: string,
-    dto: UpdateUserDto,
+    dto: UpdateUserProfileDto,
   ): Promise<UserProfileEntity> {
     const profile = await this.getProfileByUserId(userId);
 

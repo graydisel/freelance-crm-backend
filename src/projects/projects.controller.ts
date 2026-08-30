@@ -18,15 +18,12 @@ import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { GetProjectsFilterDto } from './dto/get-projects-filter.dto';
-import { ProjectStatus } from './enums/project-status.enum';
 
 @Controller('projects')
 export class ProjectsController {
   private readonly logger = new Logger(ProjectsController.name);
 
-  constructor(
-    private readonly projectsService: ProjectsService,
-  ) { }
+  constructor(private readonly projectsService: ProjectsService) {}
 
   @Get()
   @Roles('admin', 'manager', 'client')
@@ -55,9 +52,17 @@ export class ProjectsController {
   @Patch(':id/status')
   @Roles('admin', 'manager')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  updateStatus(@Param('id') id: string, @Body() updateProjectStatusDto: UpdateProjectStatusDto) {
-    this.logger.log(`PATCH /projects/${id}/status triggered with body: ${JSON.stringify(updateProjectStatusDto)}`);
-    return this.projectsService.updateStatus(id, updateProjectStatusDto.newStatus);
+  updateStatus(
+    @Param('id') id: string,
+    @Body() updateProjectStatusDto: UpdateProjectStatusDto,
+  ) {
+    this.logger.log(
+      `PATCH /projects/${id}/status triggered with body: ${JSON.stringify(updateProjectStatusDto)}`,
+    );
+    return this.projectsService.updateStatus(
+      id,
+      updateProjectStatusDto.newStatus,
+    );
   }
 
   @Get(':id')

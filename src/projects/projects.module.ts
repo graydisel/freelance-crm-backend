@@ -12,10 +12,10 @@ import { UserProfilesModule } from 'src/user-profiles/user-profiles.module';
     TypeOrmModule.forFeature([ProjectEntity]),
     ClientProfilesModule,
     UsersModule,
-    UserProfilesModule
+    UserProfilesModule,
   ],
   exports: [ProjectsService],
   providers: [ProjectsService],
   controllers: [ProjectsController],
 })
-export class ProjectsModule { }
+export class ProjectsModule {}

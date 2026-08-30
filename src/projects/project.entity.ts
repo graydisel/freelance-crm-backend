@@ -9,7 +9,6 @@ import {
 } from 'typeorm';
 import { TaskEntity } from '../tasks/task.entity';
 import { ClientProfileEntity } from '../client-profiles/client-profile.entity';
-import { UserEntity } from '../users/user.entity';
 import { ProjectStatus } from './enums/project-status.enum';
 import { UserProfileEntity } from 'src/user-profiles/user-profiles.entity';
 

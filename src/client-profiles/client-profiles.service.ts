@@ -23,7 +23,7 @@ export class ClientProfilesService {
 
     private readonly usersService: UsersService,
     private readonly dataSource: DataSource,
-  ) { }
+  ) {}
 
   async create(dto: CreateClientDto): Promise<ClientProfileEntity> {
     const email = dto.contactEmail;
@@ -47,8 +47,7 @@ export class ClientProfilesService {
           newClientProfile,
         );
 
-        const existingUser =
-          await this.usersService.findByEmail(email);
+        const existingUser = await this.usersService.findByEmail(email);
 
         if (existingUser) {
           const attachedCompanyId = existingUser.client?.id;
