@@ -90,6 +90,19 @@ export class UsersService {
     return user;
   }
 
+  async findForAuth(email: string): Promise<UserEntity | null> {
+    return this.userRepository
+      .createQueryBuilder('user')
+      .addSelect('user.passwordHash')
+      .leftJoinAndSelect('user.role', 'role')
+      .leftJoinAndSelect('user.profile', 'profile')
+      .leftJoinAndSelect('user.client', 'client')
+      .where('LOWER(user.email) = :email', {
+        email: email.toLowerCase().trim(),
+      })
+      .getOne();
+  }
+
   async findByEmail(email: string): Promise<UserEntity | null> {
     return await this.userRepository.findOne({
       where: { email: email.toLowerCase().trim() },

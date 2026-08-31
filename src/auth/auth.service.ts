@@ -14,17 +14,14 @@ export class AuthService {
   async validateUser(
     email: string,
     password: string,
-  ): Promise<Omit<UserEntity, 'passwordHash'> | null> {
-    const user = await this.usersService.findByEmail(email);
+  ): Promise<UserEntity | null> {
+    const user = await this.usersService.findForAuth(email);
 
-    if (user) {
-      const isMatch = await bcrypt.compare(password, user.passwordHash);
-      if (isMatch) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { passwordHash, ...result } = user;
-        return result;
-      }
+    if (user && (await bcrypt.compare(password, user.passwordHash))) {
+      delete (user as Partial<UserEntity>).passwordHash;
+      return user;
     }
+
     return null;
   }
 
