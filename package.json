@@ -23,7 +23,9 @@
     "migration:generate": "npm run typeorm -- migration:generate -d data-source.ts",
     "migration:run": "npm run typeorm -- migration:run -d data-source.ts",
     "migration:revert": "npm run typeorm -- migration:revert -d data-source.ts",
-    "seed": "ts-node -r tsconfig-paths/register src/seed.ts"
+    "seed": "ts-node -r tsconfig-paths/register src/seed.ts",
+    "env:init": "node -e \"require('fs').copyFileSync('.env.example', '.env')\"",
+    "env:check": "node -e \"if (!require('fs').existsSync('.env')) require('fs').copyFileSync('.env.example', '.env')\""
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
