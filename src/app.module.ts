@@ -19,6 +19,8 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { RouteTimerInterceptor } from './interceptors/route-timer.interceptor';
 import { UserProfilesModule } from './user-profiles/user-profiles.module';
 import { UserProfileEntity } from './user-profiles/user-profiles.entity';
+import { HealthController } from './health/health.controller';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -77,6 +79,7 @@ import { UserProfileEntity } from './user-profiles/user-profiles.entity';
     AuthModule,
     DashboardModule,
     UserProfilesModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [
@@ -87,4 +90,4 @@ import { UserProfileEntity } from './user-profiles/user-profiles.entity';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }
