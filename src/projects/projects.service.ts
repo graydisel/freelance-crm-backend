@@ -27,7 +27,9 @@ export class ProjectsService {
   async create(dto: CreateProjectDto): Promise<ProjectEntity> {
     const client = await this.clientProfilesService.findOne(dto.clientId);
 
-    const manager = await this.usersService.findOne(dto.managerId);
+    const manager = await this.userProfileService.getProfileByUserId(
+      dto.managerId,
+    );
 
     const newProject = this.projectRepository.create({
       name: dto.name,
