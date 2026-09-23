@@ -18,7 +18,7 @@ export class TasksService {
     private readonly taskRepository: Repository<TaskEntity>,
     private readonly projectsService: ProjectsService,
     private readonly usersService: UsersService,
-  ) {}
+  ) { }
 
   async create(dto: CreateTaskDto, creatorId: string): Promise<TaskEntity> {
     const project = await this.projectsService.findOne(dto.projectId);
@@ -39,16 +39,18 @@ export class TasksService {
       creator: creator,
     });
 
-    return this.taskRepository.save(newTask);
+    const saved = await this.taskRepository.save(newTask);
+    return this.findOne(saved.id);
   }
 
   async findAll(): Promise<TaskEntity[]> {
     return this.taskRepository.find({
       relations: {
         project: true,
-        creator: true,
-        assignee: true,
+        creator: { profile: true },
+        assignee: { profile: true },
       },
+      order: { createdAt: 'DESC' },
     });
   }
 
@@ -58,7 +60,9 @@ export class TasksService {
     const query = this.taskRepository
       .createQueryBuilder('task')
       .leftJoinAndSelect('task.assignee', 'assignee')
+      .leftJoinAndSelect('assignee.profile', 'assigneeProfile')
       .leftJoinAndSelect('task.creator', 'creator')
+      .leftJoinAndSelect('creator.profile', 'creatorProfile')
       .leftJoinAndSelect('task.project', 'project')
       .where('task.project_id = :projectId', { projectId });
 
@@ -82,8 +86,8 @@ export class TasksService {
       where: { id },
       relations: {
         project: true,
-        assignee: true,
-        creator: true,
+        assignee: { profile: true },
+        creator: { profile: true },
       },
     });
     if (!task) {
@@ -95,7 +99,11 @@ export class TasksService {
   async findByProject(projectId: string): Promise<TaskEntity[]> {
     return this.taskRepository.find({
       where: { project: { id: projectId } },
-      relations: { assignee: true, creator: true },
+      relations: {
+        assignee: { profile: true },
+        creator: { profile: true },
+      },
+      order: { createdAt: 'DESC' },
     });
   }
 
@@ -112,7 +120,8 @@ export class TasksService {
     }
 
     task.status = newStatus;
-    return this.taskRepository.save(task);
+    await this.taskRepository.save(task);
+    return this.findOne(taskId);
   }
 
   async updatePriority(
@@ -128,25 +137,33 @@ export class TasksService {
     }
 
     task.priority = newPriority;
-    return this.taskRepository.save(task);
+    await this.taskRepository.save(task);
+    return this.findOne(taskId);
   }
 
   async updateTask(taskId: string, dto: UpdateTaskDto): Promise<TaskEntity> {
     const task = await this.findOne(taskId);
 
     if (dto.title && dto.title !== task.title) task.title = dto.title;
-    if (dto.description && dto.description !== task.description)
+    if (dto.description !== undefined && dto.description !== task.description)
       task.description = dto.description;
 
-    if (dto.assigneeId && dto.assigneeId !== task.assignee?.id) {
-      task.assignee = await this.usersService.findOne(dto.assigneeId);
+    if (dto.assigneeId !== undefined) {
+      if (dto.assigneeId) {
+        if (dto.assigneeId !== task.assignee?.id) {
+          task.assignee = await this.usersService.findOne(dto.assigneeId);
+        }
+      } else {
+        task.assignee = null;
+      }
     }
 
     if (dto.status && dto.status !== task.status) task.status = dto.status;
     if (dto.priority && dto.priority !== task.priority)
       task.priority = dto.priority;
 
-    return this.taskRepository.save(task);
+    await this.taskRepository.save(task);
+    return this.findOne(taskId);
   }
 
   async remove(taskId: string): Promise<void> {
