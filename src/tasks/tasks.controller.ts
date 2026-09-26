@@ -20,6 +20,8 @@ import { GetFilteredTasksDto } from './dto/get-filtered-tasks.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { UserEntity } from '../users/user.entity';
 
 @Controller('tasks')
 export class TasksController {
@@ -57,11 +59,12 @@ export class TasksController {
   updateStatus(
     @Param('id') id: string,
     @Body('newStatus') newStatus: TaskStatus,
+    @CurrentUser() user: UserEntity,
   ) {
     this.logger.log(
       `PATCH tasks/${id}/status triggered with body: ${JSON.stringify({ newStatus })}`,
     );
-    return this.tasksService.updateStatus(id, newStatus);
+    return this.tasksService.updateStatus(id, newStatus, user);
   }
 
   @Patch(':id/priority')

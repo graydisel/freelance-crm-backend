@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TaskEntity } from './task.entity';
 import { Repository } from 'typeorm';
@@ -10,6 +14,8 @@ import { UserEntity } from '../users/user.entity';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskPriority } from './enums/task-priority.enum';
 import { GetFilteredTasksDto } from './dto/get-filtered-tasks.dto';
+import { STATUS_TRANSITIONS } from './constants/status-transitions';
+import { RolesEnum } from 'src/roles/enums/roles.enum';
 
 @Injectable()
 export class TasksService {
@@ -18,7 +24,7 @@ export class TasksService {
     private readonly taskRepository: Repository<TaskEntity>,
     private readonly projectsService: ProjectsService,
     private readonly usersService: UsersService,
-  ) { }
+  ) {}
 
   async create(dto: CreateTaskDto, creatorId: string): Promise<TaskEntity> {
     const project = await this.projectsService.findOne(dto.projectId);
@@ -110,13 +116,33 @@ export class TasksService {
   async updateStatus(
     taskId: string,
     newStatus: TaskStatus,
+    currentUser: UserEntity,
   ): Promise<TaskEntity> {
     const task = await this.taskRepository.findOne({
       where: { id: taskId },
+      relations: { assignee: { profile: true } },
     });
 
     if (!task) {
       throw new NotFoundException(`Task with id ${taskId} not found`);
+    }
+
+    const userRole = currentUser.role?.name as RolesEnum;
+    const allowedStatuses = STATUS_TRANSITIONS[userRole] ?? [];
+
+    if (!allowedStatuses.includes(newStatus)) {
+      throw new ForbiddenException(
+        `User with role ${userRole} cannot change task status to ${newStatus}`,
+      );
+    }
+
+    if (
+      userRole === RolesEnum.DEVELOPER &&
+      task.assignee?.id !== currentUser.id
+    ) {
+      throw new ForbiddenException(
+        `Developer is not allowed to change status of unassigned task`,
+      );
     }
 
     task.status = newStatus;

@@ -5,10 +5,7 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
-    origin: [
-      'http://localhost:4200',
-      'https://freelance-crm-six.vercel.app',
-    ],
+    origin: ['http://localhost:4200', 'https://freelance-crm-six.vercel.app'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
