@@ -16,7 +16,7 @@ export class UsersService {
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
     private readonly rolesService: RolesService,
-  ) {}
+  ) { }
 
   async createUser(
     createUserDto: CreateUserDto,
@@ -95,6 +95,7 @@ export class UsersService {
       .createQueryBuilder('user')
       .addSelect('user.passwordHash')
       .leftJoinAndSelect('user.role', 'role')
+      .leftJoinAndSelect('role.permissions', 'permissions')
       .leftJoinAndSelect('user.profile', 'profile')
       .leftJoinAndSelect('user.client', 'client')
       .where('LOWER(user.email) = :email', {

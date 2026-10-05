@@ -8,7 +8,7 @@ export class RolesService implements OnModuleInit {
   constructor(
     @InjectRepository(RoleEntity)
     private readonly rolesRepository: Repository<RoleEntity>,
-  ) {}
+  ) { }
   async onModuleInit() {
     await this.seedRoles();
   }

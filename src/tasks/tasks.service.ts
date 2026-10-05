@@ -16,6 +16,8 @@ import { TaskPriority } from './enums/task-priority.enum';
 import { GetFilteredTasksDto } from './dto/get-filtered-tasks.dto';
 import { STATUS_TRANSITIONS } from './constants/status-transitions';
 import { RolesEnum } from 'src/roles/enums/roles.enum';
+import { Permission } from 'src/roles/enums/permission.enum';
+import { AuthenticatedUser } from 'src/auth/interfaces/request-with-user.interface';
 
 @Injectable()
 export class TasksService {
@@ -24,7 +26,7 @@ export class TasksService {
     private readonly taskRepository: Repository<TaskEntity>,
     private readonly projectsService: ProjectsService,
     private readonly usersService: UsersService,
-  ) {}
+  ) { }
 
   async create(dto: CreateTaskDto, creatorId: string): Promise<TaskEntity> {
     const project = await this.projectsService.findOne(dto.projectId);
@@ -116,7 +118,7 @@ export class TasksService {
   async updateStatus(
     taskId: string,
     newStatus: TaskStatus,
-    currentUser: UserEntity,
+    currentUser: AuthenticatedUser,
   ): Promise<TaskEntity> {
     const task = await this.taskRepository.findOne({
       where: { id: taskId },
@@ -127,21 +129,20 @@ export class TasksService {
       throw new NotFoundException(`Task with id ${taskId} not found`);
     }
 
-    const userRole = currentUser.role?.name as RolesEnum;
-    const allowedStatuses = STATUS_TRANSITIONS[userRole] ?? [];
+    const permissions = new Set(currentUser.permissions);
 
-    if (!allowedStatuses.includes(newStatus)) {
+    if (newStatus === TaskStatus.DONE && !permissions.has(Permission.TASKS_COMPLETE)) {
       throw new ForbiddenException(
-        `User with role ${userRole} cannot change task status to ${newStatus}`,
+        'You do not have permission to mark tasks as DONE. Please move it to REVIEW instead',
       );
     }
 
-    if (
-      userRole === RolesEnum.DEVELOPER &&
-      task.assignee?.id !== currentUser.id
-    ) {
+    const canManageAll = permissions.has(Permission.TASKS_MANAGE_ALL);
+    const isAssignee = task.assignee?.id === currentUser.id;
+
+    if (!canManageAll && !isAssignee) {
       throw new ForbiddenException(
-        `Developer is not allowed to change status of unassigned task`,
+        'You can only change the status of tasks assigned to you',
       );
     }
 

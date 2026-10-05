@@ -11,52 +11,55 @@ import { TaskPriority } from './tasks/enums/task-priority.enum';
 import * as dotenv from 'dotenv';
 import { ClientStatus } from './client-profiles/enums/client-status.enum';
 import { UserProfileEntity } from './user-profiles/user-profiles.entity';
+import { PermissionEntity } from './roles/permission.entity';
+import { Permission } from './roles/enums/permission.enum';
 
 dotenv.config();
 
 async function run() {
   console.log('🌱 Start database seed...');
 
-  // Универсальное подключение: если есть POSTGRES_BASE — берем его, иначе собираем параметры из env/Docker
   const isRemote = !!process.env.POSTGRES_BASE;
 
   const dataSource = new DataSource(
     isRemote
       ? {
-          type: 'postgres',
-          url: process.env.POSTGRES_BASE,
-          ssl:
-            process.env.DB_SSL === 'false'
-              ? false
-              : { rejectUnauthorized: false },
-          entities: [
-            UserEntity,
-            RoleEntity,
-            ClientProfileEntity,
-            ProjectEntity,
-            TaskEntity,
-            UserProfileEntity,
-          ],
-          synchronize: true,
-        }
+        type: 'postgres',
+        url: process.env.POSTGRES_BASE,
+        ssl:
+          process.env.DB_SSL === 'false'
+            ? false
+            : { rejectUnauthorized: false },
+        entities: [
+          UserEntity,
+          RoleEntity,
+          ClientProfileEntity,
+          ProjectEntity,
+          TaskEntity,
+          UserProfileEntity,
+          PermissionEntity,
+        ],
+        synchronize: true,
+      }
       : {
-          type: 'postgres',
-          host: process.env.DB_HOST || 'localhost',
-          port: Number(process.env.DB_PORT) || 5432,
-          username: process.env.DB_USERNAME || 'postgres',
-          password: process.env.DB_PASSWORD || 'postgres_password',
-          database: process.env.DB_DATABASE || 'crm_db',
-          ssl: false,
-          entities: [
-            UserEntity,
-            RoleEntity,
-            ClientProfileEntity,
-            ProjectEntity,
-            TaskEntity,
-            UserProfileEntity,
-          ],
-          synchronize: true,
-        },
+        type: 'postgres',
+        host: process.env.DB_HOST || 'localhost',
+        port: Number(process.env.DB_PORT) || 5432,
+        username: process.env.DB_USERNAME || 'postgres',
+        password: process.env.DB_PASSWORD || 'postgres_password',
+        database: process.env.DB_DATABASE || 'crm_db',
+        ssl: false,
+        entities: [
+          UserEntity,
+          RoleEntity,
+          ClientProfileEntity,
+          ProjectEntity,
+          TaskEntity,
+          UserProfileEntity,
+          PermissionEntity,
+        ],
+        synchronize: true,
+      },
   );
 
   try {
@@ -68,34 +71,83 @@ async function run() {
     const clientRepo = dataSource.getRepository(ClientProfileEntity);
     const projectRepo = dataSource.getRepository(ProjectEntity);
     const taskRepo = dataSource.getRepository(TaskEntity);
+    const permissionRepo = dataSource.getRepository(PermissionEntity);
 
-    console.log('🛡️ Checking system roles...');
-    let adminRole = await roleRepo.findOne({ where: { name: 'admin' } });
-    if (!adminRole)
-      adminRole = await roleRepo.save(roleRepo.create({ name: 'admin' }));
+    console.log('🔑 Checking system permissions...');
+    const allPermissions = Object.values(Permission);
+    const savedPermissions: PermissionEntity[] = [];
 
-    let managerRole = await roleRepo.findOne({ where: { name: 'manager' } });
-    if (!managerRole)
-      managerRole = await roleRepo.save(roleRepo.create({ name: 'manager' }));
+    for (const permName of allPermissions) {
+      let permission = await permissionRepo.findOne({ where: { name: permName } });
+      if (!permission) {
+        permission = await permissionRepo.save(permissionRepo.create({ name: permName }));
+      }
+      savedPermissions.push(permission);
+    }
 
-    let developerRole = await roleRepo.findOne({
-      where: { name: 'developer' },
-    });
-    if (!developerRole)
-      developerRole = await roleRepo.save(
-        roleRepo.create({ name: 'developer' }),
-      );
+    console.log('🛡️ Checking system roles and assigning permissions...');
+    const roleDefs = [
+      {
+        name: 'admin',
+        permissions: allPermissions,
+      },
+      {
+        name: 'manager',
+        permissions: [
+          Permission.PROJECTS_READ, Permission.PROJECTS_CREATE, Permission.PROJECTS_UPDATE, Permission.PROJECTS_DELETE,
+          Permission.TASKS_READ, Permission.TASKS_CREATE, Permission.TASKS_UPDATE, Permission.TASKS_UPDATE_STATUS, Permission.TASKS_COMPLETE, Permission.TASKS_MANAGE_ALL, Permission.TASKS_DELETE,
+          Permission.ANALYTICS_READ,
+        ],
+      },
+      {
+        name: 'developer',
+        permissions: [
+          Permission.PROJECTS_READ,
+          Permission.TASKS_READ, Permission.TASKS_UPDATE,
+        ],
+      },
+      {
+        name: 'demo_manager',
+        permissions: [
+          Permission.PROJECTS_READ,
+          Permission.TASKS_READ,
+          Permission.ANALYTICS_READ,
+        ],
+      },
+      {
+        name: 'client',
+        permissions: [
+          Permission.PROJECTS_READ,
+          Permission.TASKS_READ,
+        ],
+      },
+    ];
 
-    let clientRole = await roleRepo.findOne({ where: { name: 'client' } });
-    if (!clientRole)
-      clientRole = await roleRepo.save(roleRepo.create({ name: 'client' }));
+    const rolesMap: Record<string, RoleEntity> = {};
+
+    for (const roleDef of roleDefs) {
+      let role = await roleRepo.findOne({ where: { name: roleDef.name }, relations: { permissions: true } });
+      if (!role) {
+        role = roleRepo.create({ name: roleDef.name });
+      }
+
+      role.permissions = savedPermissions.filter(p => roleDef.permissions.includes(p.name as Permission));
+      role = await roleRepo.save(role);
+      rolesMap[roleDef.name] = role;
+    }
+
+    const adminRole = rolesMap['admin'];
+    const managerRole = rolesMap['manager'];
+    const developerRole = rolesMap['developer'];
+    const clientRole = rolesMap['client'];
+    const demoManagerRole = rolesMap['demo_manager'];
 
     console.log('👤 Checking system users...');
     const passwordHash = await bcrypt.hash('password123', 10);
 
     let admin = await userRepo.findOne({
       where: { email: 'admin@crm.com' },
-      relations: { profile: true },
+      relations: { profile: true, role: true },
     });
     if (!admin) {
       admin = await userRepo.save(
@@ -109,11 +161,14 @@ async function run() {
           role: adminRole,
         }),
       );
+    } else if (admin.role?.id !== adminRole.id) {
+      admin.role = adminRole;
+      admin = await userRepo.save(admin);
     }
 
     let manager = await userRepo.findOne({
       where: { email: 'manager@crm.com' },
-      relations: { profile: true },
+      relations: { profile: true, role: true },
     });
     if (!manager) {
       manager = await userRepo.save(
@@ -127,11 +182,14 @@ async function run() {
           role: managerRole,
         }),
       );
+    } else if (manager.role?.id !== managerRole.id) {
+      manager.role = managerRole;
+      manager = await userRepo.save(manager);
     }
 
     let developer = await userRepo.findOne({
       where: { email: 'developer@crm.com' },
-      relations: { profile: true },
+      relations: { profile: true, role: true },
     });
     if (!developer) {
       developer = await userRepo.save(
@@ -145,11 +203,35 @@ async function run() {
           role: developerRole,
         }),
       );
+    } else if (developer.role?.id !== developerRole.id) {
+      developer.role = developerRole;
+      developer = await userRepo.save(developer);
+    }
+
+    let demoManager = await userRepo.findOne({
+      where: { email: 'demo@crm.com' },
+      relations: { profile: true, role: true },
+    });
+    if (!demoManager) {
+      demoManager = await userRepo.save(
+        userRepo.create({
+          email: 'demo@crm.com',
+          profile: {
+            firstName: 'Demo',
+            lastName: 'Manager',
+          },
+          passwordHash,
+          role: demoManagerRole,
+        }),
+      );
+    } else if (demoManager.role?.id !== demoManagerRole.id) {
+      demoManager.role = demoManagerRole;
+      demoManager = await userRepo.save(demoManager);
     }
 
     let client = await userRepo.findOne({
       where: { email: 'client@crm.com' },
-      relations: { profile: true },
+      relations: { profile: true, role: true },
     });
     if (!client) {
       client = await userRepo.save(
@@ -163,6 +245,9 @@ async function run() {
           role: clientRole,
         }),
       );
+    } else if (client.role?.id !== clientRole.id) {
+      client.role = clientRole;
+      client = await userRepo.save(client);
     }
 
     console.log('🧹 Cleaning old transactional data...');

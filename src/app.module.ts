@@ -15,11 +15,14 @@ import { RolesModule } from './roles/roles.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { DashboardModule } from './dashboard/dashboard.module';
-import { APP_INTERCEPTOR } from '@nestjs/core';
-import { RouteTimerInterceptor } from './interceptors/route-timer.interceptor';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { RouteTimerInterceptor } from './common/interceptors/route-timer.interceptor';
 import { UserProfilesModule } from './user-profiles/user-profiles.module';
 import { UserProfileEntity } from './user-profiles/user-profiles.entity';
 import { HealthModule } from './health/health.module';
+import { AuthGuard } from '@nestjs/passport';
+import { PermissionEntity } from './roles/permission.entity';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -40,13 +43,14 @@ import { HealthModule } from './health/health.module';
           ClientProfileEntity,
           RoleEntity,
           UserProfileEntity,
+          PermissionEntity
         ];
 
         if (dbUrl) {
           return {
             type: 'postgres',
             url: dbUrl,
-            entities: commonEntities,
+            autoLoadEntities: true,
             synchronize: false,
             migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
             ssl: enableSsl ? { rejectUnauthorized: false } : false,
@@ -63,7 +67,7 @@ import { HealthModule } from './health/health.module';
             'postgres_password',
           ),
           database: configService.get<string>('DB_DATABASE', 'crm_db'),
-          entities: commonEntities,
+          autoLoadEntities: true,
           synchronize: true,
           migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
           ssl: false,
@@ -78,15 +82,19 @@ import { HealthModule } from './health/health.module';
     AuthModule,
     DashboardModule,
     UserProfilesModule,
-    HealthModule,
+    HealthModule
   ],
   controllers: [AppController],
   providers: [
     AppService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
     {
       provide: APP_INTERCEPTOR,
       useClass: RouteTimerInterceptor,
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }

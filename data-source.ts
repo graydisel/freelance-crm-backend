@@ -7,6 +7,7 @@ import { ProjectEntity } from './src/projects/project.entity';
 import { TaskEntity } from './src/tasks/task.entity';
 
 import { UserProfileEntity } from './src/user-profiles/user-profiles.entity';
+import { PermissionEntity } from './src/roles/permission.entity';
 
 dotenv.config();
 const isSslRequired =
@@ -29,6 +30,7 @@ const baseConfig: DataSourceOptions = {
     ProjectEntity,
     TaskEntity,
     UserProfileEntity,
+    PermissionEntity,
   ],
   migrations: ['./src/migrations/*.ts'],
   synchronize: true,

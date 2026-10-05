@@ -10,16 +10,18 @@ import {
 } from '@nestjs/common';
 import { CreateClientDto } from './dto/create-client.dto';
 import { ClientProfilesService } from './client-profiles.service';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { Roles } from '../common/decorators/roles.decorator';
 import { GetClientsFilterDto } from './dto/get-clients-filter.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
 
 @Controller('client')
+@UseGuards(RolesGuard, PermissionsGuard)
 export class ClientProfilesController {
-  constructor(private readonly clientProfilesService: ClientProfilesService) {}
+  constructor(private readonly clientProfilesService: ClientProfilesService) { }
 
   @Post()
   @Roles('admin', 'manager')

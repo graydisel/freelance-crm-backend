@@ -1,16 +1,16 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
-import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { RequirePermissions } from '../common/decorators/require-permissions.decorator';
+import { Permission } from '../roles/enums/permission.enum';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
 
 @Controller('dashboard')
+@UseGuards(PermissionsGuard)
 export class DashboardController {
-  constructor(private readonly dashboardService: DashboardService) {}
+  constructor(private readonly dashboardService: DashboardService) { }
 
   @Get('stats')
-  @Roles('admin', 'manager')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @RequirePermissions(Permission.ANALYTICS_READ)
   getStats() {
     return this.dashboardService.getDashboardStats();
   }

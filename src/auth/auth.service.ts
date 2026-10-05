@@ -11,7 +11,7 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   async validateUser(
     email: string,
@@ -43,10 +43,13 @@ export class AuthService {
   }
 
   async login(user: UserEntity) {
+    const permissions = user.role?.permissions?.map((p) => p.name) ?? [];
+
     const payload = {
       email: user.email,
       sub: user.id,
       role: user.role?.name,
+      permissions: permissions,
     };
 
     return {
@@ -56,11 +59,12 @@ export class AuthService {
         email: user.email,
         profile: user.profile
           ? {
-              firstName: user.profile.firstName,
-              lastName: user.profile.lastName,
-            }
+            firstName: user.profile.firstName,
+            lastName: user.profile.lastName,
+          }
           : null,
         role: user.role?.name,
+        permissions,
       },
     };
   }
