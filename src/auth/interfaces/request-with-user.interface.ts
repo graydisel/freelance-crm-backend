@@ -1,8 +1,13 @@
-import { Permission } from 'src/roles/enums/permission.enum';
 import { UserEntity } from '../../users/user.entity';
+import { Permission } from 'src/roles/enums/permission.enum';
+import { Request } from 'express';
+
+export interface RequestWithUserEntity extends Omit<Request, 'user'> {
+  user: UserEntity;
+}
 
 export interface RequestWithUser extends Request {
-  user: UserEntity;
+  user: AuthenticatedUser;
 }
 
 export interface JwtPayload {
