@@ -16,7 +16,7 @@ export class UsersService {
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
     private readonly rolesService: RolesService,
-  ) { }
+  ) {}
 
   async createUser(
     createUserDto: CreateUserDto,

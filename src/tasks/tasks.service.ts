@@ -14,8 +14,6 @@ import { UserEntity } from '../users/user.entity';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskPriority } from './enums/task-priority.enum';
 import { GetFilteredTasksDto } from './dto/get-filtered-tasks.dto';
-import { STATUS_TRANSITIONS } from './constants/status-transitions';
-import { RolesEnum } from 'src/roles/enums/roles.enum';
 import { Permission } from 'src/roles/enums/permission.enum';
 import { AuthenticatedUser } from 'src/auth/interfaces/request-with-user.interface';
 
@@ -26,7 +24,7 @@ export class TasksService {
     private readonly taskRepository: Repository<TaskEntity>,
     private readonly projectsService: ProjectsService,
     private readonly usersService: UsersService,
-  ) { }
+  ) {}
 
   async create(dto: CreateTaskDto, creatorId: string): Promise<TaskEntity> {
     const project = await this.projectsService.findOne(dto.projectId);
@@ -131,7 +129,10 @@ export class TasksService {
 
     const permissions = new Set(currentUser.permissions);
 
-    if (newStatus === TaskStatus.DONE && !permissions.has(Permission.TASKS_COMPLETE)) {
+    if (
+      newStatus === TaskStatus.DONE &&
+      !permissions.has(Permission.TASKS_COMPLETE)
+    ) {
       throw new ForbiddenException(
         'You do not have permission to mark tasks as DONE. Please move it to REVIEW instead',
       );

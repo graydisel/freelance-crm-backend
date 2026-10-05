@@ -9,4 +9,4 @@ import { PermissionEntity } from './permission.entity';
   providers: [RolesService],
   exports: [RolesService],
 })
-export class RolesModule { }
+export class RolesModule {}

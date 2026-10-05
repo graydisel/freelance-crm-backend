@@ -7,7 +7,7 @@ import { PermissionsGuard } from '../auth/guards/permissions.guard';
 @Controller('dashboard')
 @UseGuards(PermissionsGuard)
 export class DashboardController {
-  constructor(private readonly dashboardService: DashboardService) { }
+  constructor(private readonly dashboardService: DashboardService) {}
 
   @Get('stats')
   @RequirePermissions(Permission.ANALYTICS_READ)

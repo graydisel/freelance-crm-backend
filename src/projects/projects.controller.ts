@@ -24,7 +24,7 @@ import { RequirePermissions } from '../common/decorators/require-permissions.dec
 export class ProjectsController {
   private readonly logger = new Logger(ProjectsController.name);
 
-  constructor(private readonly projectsService: ProjectsService) { }
+  constructor(private readonly projectsService: ProjectsService) {}
 
   @Get()
   @RequirePermissions(Permission.PROJECTS_READ)

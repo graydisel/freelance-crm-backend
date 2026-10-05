@@ -24,42 +24,42 @@ async function run() {
   const dataSource = new DataSource(
     isRemote
       ? {
-        type: 'postgres',
-        url: process.env.POSTGRES_BASE,
-        ssl:
-          process.env.DB_SSL === 'false'
-            ? false
-            : { rejectUnauthorized: false },
-        entities: [
-          UserEntity,
-          RoleEntity,
-          ClientProfileEntity,
-          ProjectEntity,
-          TaskEntity,
-          UserProfileEntity,
-          PermissionEntity,
-        ],
-        synchronize: true,
-      }
+          type: 'postgres',
+          url: process.env.POSTGRES_BASE,
+          ssl:
+            process.env.DB_SSL === 'false'
+              ? false
+              : { rejectUnauthorized: false },
+          entities: [
+            UserEntity,
+            RoleEntity,
+            ClientProfileEntity,
+            ProjectEntity,
+            TaskEntity,
+            UserProfileEntity,
+            PermissionEntity,
+          ],
+          synchronize: true,
+        }
       : {
-        type: 'postgres',
-        host: process.env.DB_HOST || 'localhost',
-        port: Number(process.env.DB_PORT) || 5432,
-        username: process.env.DB_USERNAME || 'postgres',
-        password: process.env.DB_PASSWORD || 'postgres_password',
-        database: process.env.DB_DATABASE || 'crm_db',
-        ssl: false,
-        entities: [
-          UserEntity,
-          RoleEntity,
-          ClientProfileEntity,
-          ProjectEntity,
-          TaskEntity,
-          UserProfileEntity,
-          PermissionEntity,
-        ],
-        synchronize: true,
-      },
+          type: 'postgres',
+          host: process.env.DB_HOST || 'localhost',
+          port: Number(process.env.DB_PORT) || 5432,
+          username: process.env.DB_USERNAME || 'postgres',
+          password: process.env.DB_PASSWORD || 'postgres_password',
+          database: process.env.DB_DATABASE || 'crm_db',
+          ssl: false,
+          entities: [
+            UserEntity,
+            RoleEntity,
+            ClientProfileEntity,
+            ProjectEntity,
+            TaskEntity,
+            UserProfileEntity,
+            PermissionEntity,
+          ],
+          synchronize: true,
+        },
   );
 
   try {
@@ -78,9 +78,13 @@ async function run() {
     const savedPermissions: PermissionEntity[] = [];
 
     for (const permName of allPermissions) {
-      let permission = await permissionRepo.findOne({ where: { name: permName } });
+      let permission = await permissionRepo.findOne({
+        where: { name: permName },
+      });
       if (!permission) {
-        permission = await permissionRepo.save(permissionRepo.create({ name: permName }));
+        permission = await permissionRepo.save(
+          permissionRepo.create({ name: permName }),
+        );
       }
       savedPermissions.push(permission);
     }
@@ -94,8 +98,17 @@ async function run() {
       {
         name: 'manager',
         permissions: [
-          Permission.PROJECTS_READ, Permission.PROJECTS_CREATE, Permission.PROJECTS_UPDATE, Permission.PROJECTS_DELETE,
-          Permission.TASKS_READ, Permission.TASKS_CREATE, Permission.TASKS_UPDATE, Permission.TASKS_UPDATE_STATUS, Permission.TASKS_COMPLETE, Permission.TASKS_MANAGE_ALL, Permission.TASKS_DELETE,
+          Permission.PROJECTS_READ,
+          Permission.PROJECTS_CREATE,
+          Permission.PROJECTS_UPDATE,
+          Permission.PROJECTS_DELETE,
+          Permission.TASKS_READ,
+          Permission.TASKS_CREATE,
+          Permission.TASKS_UPDATE,
+          Permission.TASKS_UPDATE_STATUS,
+          Permission.TASKS_COMPLETE,
+          Permission.TASKS_MANAGE_ALL,
+          Permission.TASKS_DELETE,
           Permission.ANALYTICS_READ,
         ],
       },
@@ -103,7 +116,8 @@ async function run() {
         name: 'developer',
         permissions: [
           Permission.PROJECTS_READ,
-          Permission.TASKS_READ, Permission.TASKS_UPDATE,
+          Permission.TASKS_READ,
+          Permission.TASKS_UPDATE,
         ],
       },
       {
@@ -116,22 +130,24 @@ async function run() {
       },
       {
         name: 'client',
-        permissions: [
-          Permission.PROJECTS_READ,
-          Permission.TASKS_READ,
-        ],
+        permissions: [Permission.PROJECTS_READ, Permission.TASKS_READ],
       },
     ];
 
     const rolesMap: Record<string, RoleEntity> = {};
 
     for (const roleDef of roleDefs) {
-      let role = await roleRepo.findOne({ where: { name: roleDef.name }, relations: { permissions: true } });
+      let role = await roleRepo.findOne({
+        where: { name: roleDef.name },
+        relations: { permissions: true },
+      });
       if (!role) {
         role = roleRepo.create({ name: roleDef.name });
       }
 
-      role.permissions = savedPermissions.filter(p => roleDef.permissions.includes(p.name as Permission));
+      role.permissions = savedPermissions.filter((p) =>
+        roleDef.permissions.includes(p.name as Permission),
+      );
       role = await roleRepo.save(role);
       rolesMap[roleDef.name] = role;
     }

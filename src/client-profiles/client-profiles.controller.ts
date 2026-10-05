@@ -21,7 +21,7 @@ import { PermissionsGuard } from '../auth/guards/permissions.guard';
 @Controller('client')
 @UseGuards(RolesGuard, PermissionsGuard)
 export class ClientProfilesController {
-  constructor(private readonly clientProfilesService: ClientProfilesService) { }
+  constructor(private readonly clientProfilesService: ClientProfilesService) {}
 
   @Post()
   @Roles('admin', 'manager')

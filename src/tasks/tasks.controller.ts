@@ -28,7 +28,7 @@ import { type AuthenticatedUser } from 'src/auth/interfaces/request-with-user.in
 export class TasksController {
   private readonly logger = new Logger(TasksController.name);
 
-  constructor(private tasksService: TasksService) { }
+  constructor(private tasksService: TasksService) {}
 
   @Post()
   @RequirePermissions(Permission.TASKS_CREATE)

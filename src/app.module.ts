@@ -2,14 +2,11 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ProjectEntity } from './projects/project.entity';
-import { TaskEntity } from './tasks/task.entity';
+
 import { ProjectsModule } from './projects/projects.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TasksModule } from './tasks/tasks.module';
-import { UserEntity } from './users/user.entity';
-import { ClientProfileEntity } from './client-profiles/client-profile.entity';
-import { RoleEntity } from './roles/role.entity';
+
 import { ClientProfilesModule } from './client-profiles/client-profiles.module';
 import { RolesModule } from './roles/roles.module';
 import { UsersModule } from './users/users.module';
@@ -18,10 +15,8 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { RouteTimerInterceptor } from './common/interceptors/route-timer.interceptor';
 import { UserProfilesModule } from './user-profiles/user-profiles.module';
-import { UserProfileEntity } from './user-profiles/user-profiles.entity';
+
 import { HealthModule } from './health/health.module';
-import { AuthGuard } from '@nestjs/passport';
-import { PermissionEntity } from './roles/permission.entity';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
 @Module({
@@ -35,16 +30,6 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
       useFactory: (configService: ConfigService) => {
         const dbUrl = configService.get<string>('POSTGRES_BASE');
         const enableSsl = configService.get<string>('DB_SSL') === 'true';
-
-        const commonEntities = [
-          ProjectEntity,
-          TaskEntity,
-          UserEntity,
-          ClientProfileEntity,
-          RoleEntity,
-          UserProfileEntity,
-          PermissionEntity
-        ];
 
         if (dbUrl) {
           return {
@@ -82,7 +67,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     AuthModule,
     DashboardModule,
     UserProfilesModule,
-    HealthModule
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [
@@ -97,4 +82,4 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

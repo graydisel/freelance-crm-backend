@@ -11,7 +11,7 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   async validateUser(
     email: string,
@@ -59,9 +59,9 @@ export class AuthService {
         email: user.email,
         profile: user.profile
           ? {
-            firstName: user.profile.firstName,
-            lastName: user.profile.lastName,
-          }
+              firstName: user.profile.firstName,
+              lastName: user.profile.lastName,
+            }
           : null,
         role: user.role?.name,
         permissions,
