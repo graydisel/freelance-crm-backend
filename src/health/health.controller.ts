@@ -2,6 +2,7 @@ import { Controller, Get, HttpStatus, HttpCode } from '@nestjs/common';
 
 @Controller('health')
 export class HealthController {
+  @Public()
   @Get()
   @HttpCode(HttpStatus.OK)
   check() {
