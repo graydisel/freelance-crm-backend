@@ -29,7 +29,9 @@ export class ClientProfilesController {
   @Post()
   @RequirePermissions(Permission.CLIENTS_CREATE)
   create(@Body() createCompanyDto: CreateClientDto) {
-    this.logger.log(`POST /client - create client: ${createCompanyDto.companyName}`);
+    this.logger.log(
+      `POST /client - create client: ${createCompanyDto.companyName}`,
+    );
     return this.clientProfilesService.create(createCompanyDto);
   }
 

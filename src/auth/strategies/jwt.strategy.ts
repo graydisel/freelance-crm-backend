@@ -25,7 +25,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       email: payload.email,
       role: payload.role,
       permissions: payload.permissions ?? [],
-      clientId: (payload as unknown as { clientId?: string | null }).clientId ?? null,
+      clientId:
+        (payload as unknown as { clientId?: string | null }).clientId ?? null,
     };
   }
 }

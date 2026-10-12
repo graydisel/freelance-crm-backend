@@ -18,10 +18,10 @@ export class RolesGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const rolesKey = process.env.ROLES_KEY || 'superRolesKey';
-    const requiredRoles = this.reflector.getAllAndOverride<string[]>(
-      rolesKey,
-      [context.getHandler(), context.getClass()],
-    );
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>(rolesKey, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
     if (!requiredRoles) {
       return true;

@@ -2,6 +2,7 @@ import { Injectable, ExecutionContext, Logger } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import { Request } from 'express';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -22,9 +23,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       context.getClass(),
     ]);
 
-    const req = context.switchToHttp().getRequest();
+    const req = context.switchToHttp().getRequest<Request>();
     this.logger.debug(
-      `Checking JWT auth for ${req?.method} ${req?.url} (isPublic: ${!!isPublic})`,
+      `Checking JWT auth for ${req.method} ${req.url} (isPublic: ${!!isPublic})`,
     );
 
     if (isPublic) {
