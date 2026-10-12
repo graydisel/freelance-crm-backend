@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from './user.entity';
 import { Repository } from 'typeorm';
@@ -12,6 +12,8 @@ import { UserProfileEntity } from 'src/user-profiles/user-profiles.entity';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
@@ -91,7 +93,8 @@ export class UsersService {
   }
 
   async findForAuth(email: string): Promise<UserEntity | null> {
-    return this.userRepository
+    this.logger.debug(`findForAuth query for: ${email}`);
+    const user = await this.userRepository
       .createQueryBuilder('user')
       .addSelect('user.passwordHash')
       .leftJoinAndSelect('user.role', 'role')
@@ -102,6 +105,13 @@ export class UsersService {
         email: email.toLowerCase().trim(),
       })
       .getOne();
+
+    this.logger.debug(
+      user
+        ? `findForAuth found user: ${email} (role: ${user.role?.name})`
+        : `findForAuth user NOT found: ${email}`,
+    );
+    return user;
   }
 
   async findByEmail(email: string): Promise<UserEntity | null> {

@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Logger,
   Param,
   Patch,
   Post,
@@ -21,11 +22,14 @@ import { Permission } from '../roles/enums/permission.enum';
 @Controller(['client', 'clients'])
 @UseGuards(PermissionsGuard)
 export class ClientProfilesController {
+  private readonly logger = new Logger(ClientProfilesController.name);
+
   constructor(private readonly clientProfilesService: ClientProfilesService) {}
 
   @Post()
   @RequirePermissions(Permission.CLIENTS_CREATE)
   create(@Body() createCompanyDto: CreateClientDto) {
+    this.logger.log(`POST /client - create client: ${createCompanyDto.companyName}`);
     return this.clientProfilesService.create(createCompanyDto);
   }
 

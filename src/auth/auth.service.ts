@@ -50,6 +50,7 @@ export class AuthService {
       sub: user.id,
       role: user.role?.name,
       permissions: permissions,
+      clientId: user.client?.id ?? null,
     };
 
     return {
@@ -64,6 +65,7 @@ export class AuthService {
             }
           : null,
         role: user.role?.name,
+        clientId: user.client?.id ?? null,
         permissions,
       },
     };

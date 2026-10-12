@@ -1,3 +1,7 @@
 import { SetMetadata } from '@nestjs/common';
+import * as dotenv from 'dotenv';
 
-export const Public = () => SetMetadata(process.env.IS_PUBLIC_KEY, true);
+dotenv.config();
+
+export const IS_PUBLIC_KEY = process.env.IS_PUBLIC_KEY || 'isPublic';
+export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
