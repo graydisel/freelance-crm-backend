@@ -13,4 +13,10 @@ export enum Permission {
   TASKS_DELETE = 'tasks:delete',
 
   ANALYTICS_READ = 'analytics:read',
+
+  // Clients
+  CLIENTS_READ = 'clients:read',
+  CLIENTS_CREATE = 'clients:create',
+  CLIENTS_UPDATE = 'clients:update',
+  CLIENTS_DELETE = 'clients:delete',
 }

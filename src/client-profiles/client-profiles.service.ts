@@ -315,4 +315,9 @@ export class ClientProfilesService {
     client.status = status;
     return this.clientProfileRepository.save(client);
   }
+
+  async remove(id: string): Promise<void> {
+    const client = await this.findOne(id);
+    await this.clientProfileRepository.remove(client);
+  }
 }

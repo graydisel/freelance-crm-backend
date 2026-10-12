@@ -110,6 +110,10 @@ async function run() {
           Permission.TASKS_MANAGE_ALL,
           Permission.TASKS_DELETE,
           Permission.ANALYTICS_READ,
+          Permission.CLIENTS_READ,
+          Permission.CLIENTS_CREATE,
+          Permission.CLIENTS_UPDATE,
+          Permission.CLIENTS_DELETE,
         ],
       },
       {
@@ -126,6 +130,7 @@ async function run() {
           Permission.PROJECTS_READ,
           Permission.TASKS_READ,
           Permission.ANALYTICS_READ,
+          Permission.CLIENTS_READ,
         ],
       },
       {
