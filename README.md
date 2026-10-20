@@ -1,6 +1,6 @@
 # 🚀 Freelance CRM — Backend API
 
-An enterprise-grade RESTful API built with **NestJS 11**, **TypeORM**, and **PostgreSQL** powering the Freelance CRM & Project Management platform. Designed for freelancers, agencies, and project managers to streamline client tracking, project workflows, interactive Kanban task management, and business analytics.
+An enterprise-grade, secure RESTful API built with **NestJS 11**, **TypeORM**, and **PostgreSQL** powering the Freelance CRM & Project Management platform. Engineered for digital agencies, freelance collectives, and project teams to manage client relationships, track contract valuations, execute tasks across an interactive Kanban desk, and enforce granular Permission-Based Access Control (PBAC).
 
 ---
 
@@ -8,14 +8,16 @@ An enterprise-grade RESTful API built with **NestJS 11**, **TypeORM**, and **Pos
 
 - [Overview](#-overview)
 - [Architecture & Tech Stack](#-architecture--tech-stack)
-- [Core Features](#-core-features)
-- [Database Schema & Roles](#-database-schema--roles)
-- [Default Test Credentials](#-default-test-credentials)
-- [API Endpoints Overview](#-api-endpoints-overview)
+- [Security & Access Control (PBAC & RBAC)](#-security--access-control-pbac--rbac)
+- [Database Schema & Relational Design](#-database-schema--relational-design)
+- [Core Modules & Features](#-core-modules--features)
+- [API Endpoints & Permission Matrix](#-api-endpoints--permission-matrix)
+- [Default Test Credentials & Seeding](#-default-test-credentials--seeding)
 - [Prerequisites](#-prerequisites)
 - [Installation & Getting Started](#-installation--getting-started)
 - [Running with Docker](#-running-with-docker)
 - [Database Migrations & Seeding](#-database-migrations--seeding)
+- [Observability & Health Checks](#-observability--health-checks)
 - [Available Scripts](#-available-scripts)
 - [CI/CD & Deployment](#-cicd--deployment)
 
@@ -23,125 +25,184 @@ An enterprise-grade RESTful API built with **NestJS 11**, **TypeORM**, and **Pos
 
 ## 🌟 Overview
 
-The **Freelance CRM Backend** serves as the central data and business logic hub for managing end-to-end client relationships, contract valuations, multi-project workflows, and granular task assignments. It delivers secure role-based access control (RBAC), robust relational integrity, and fast response times with PostgreSQL.
+The **Freelance CRM Backend** serves as the central data and business logic engine for multi-tenant, multi-role project management workflows. It couples high-performance relational querying with strict data integrity, automated audit logging, granular permission validation, and transactional operations.
 
 ---
 
 ## 🛠 Architecture & Tech Stack
 
-- **Framework:** [NestJS 11](https://nestjs.com/) (Node.js TypeScript framework)
-- **Database:** [PostgreSQL 15+](https://www.postgresql.org/) (Local Docker or Cloud PostgreSQL e.g., Neon / Render)
-- **ORM:** [TypeORM 1.0](https://typeorm.io/) (Data Mapper pattern, migrations, transactions)
+- **Framework:** [NestJS 11](https://nestjs.com/) (Modular TypeScript server-side architecture)
+- **Database:** [PostgreSQL 15+](https://www.postgresql.org/) (Local Docker container, Neon.tech, or Render Cloud Postgres)
+- **ORM:** [TypeORM 1.0](https://typeorm.io/) (Data Mapper pattern, automated migrations, declarative entities, relations)
 - **Authentication & Security:**
   - [Passport.js](http://www.passportjs.org/) (`passport-jwt`, `passport-local`)
-  - [Bcrypt](https://www.npmjs.com/package/bcrypt) for secure password hashing
-  - Role-Based Access Control (RBAC) via custom `@Roles()` decorator and `RolesGuard`
-  - Strict input validation via `class-validator` & `class-transformer` (global `ValidationPipe` with whitelist and forbidden non-whitelisted properties)
-- **Performance & Monitoring:**
+  - [Bcrypt](https://www.npmjs.com/package/bcrypt) for cryptographic password hashing
+  - Dual-layer authorization: Role-Based Access Control (**RBAC**) + Granular Permission-Based Access Control (**PBAC**)
+  - Strict input validation via `class-validator` & `class-transformer` (`ValidationPipe` with payload whitelist and forbidden unknown properties)
+- **Observability & Health:**
   - Route execution timing interceptor (`RouteTimerInterceptor`)
-  - Dedicated `/health` probe endpoint
-- **DevOps & Containerization:**
-  - Multi-stage `Dockerfile` & `docker-compose.yml` (API + PostgreSQL + Adminer)
-  - GitHub Actions CI/CD pipeline with automated linting, testing, and production deploy webhook
+  - Global application logger with contextual method traces
+  - Public `/health` monitoring probe (`HealthController`)
+- **Containerization & CI/CD:**
+  - Multi-stage `Dockerfile` & `docker-compose.yml` (API + PostgreSQL + Adminer GUI)
+  - GitHub Actions automated testing, linting, and continuous delivery via Render deployment webhooks
 
 ---
 
-## ⚡ Core Features
+## 🔐 Security & Access Control (PBAC & RBAC)
 
-### 1. 🔐 Authentication & Authorization (RBAC)
-- **JWT-Based Authentication:** Secure token generation and validation.
-- **Role Hierarchy:** Differentiated access for `admin`, `manager`, `developer`, and `client`.
-- **Protected Endpoints:** Declarative route protection combining `@UseGuards(AuthGuard('jwt'), RolesGuard)` and `@Roles(...)`.
+The system implements an enterprise-grade security model combining macro **Roles** with granular **Permissions**:
 
-### 2. 🏢 B2B Client Profiles (`/client`)
-- Full CRUD for client portfolios: company name, contact person, email, phone, and contract value.
-- Real-time client status management (`ACTIVE`, `INACTIVE`, `LEAD`, etc.).
-- Paginated search and filtering capabilities.
+### 1. Permission-Based Access Control (PBAC)
+Permissions are modeled as first-class database entities (`PermissionEntity`) associated with roles via the `role_permissions` join table:
 
-### 3. 📁 Project Management (`/projects`)
-- Comprehensive project lifecycle tracking: `PLANNED`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`, `ON_HOLD`.
-- Association with B2B client profiles, budget allocation, and deadlines.
-- Filtered pagination by search term, status, and client.
+| Domain | Permission Enum Key | Description |
+| :--- | :--- | :--- |
+| **Projects** | `projects:read` | View project listings and detailed metadata |
+| | `projects:create` | Create new projects and associate clients/managers |
+| | `projects:update` | Edit project details, budget, and lifecycle status |
+| | `projects:delete` | Delete projects (restricted by safety checks) |
+| **Tasks** | `tasks:read` | View project deliverables and Kanban task boards |
+| | `tasks:create` | Create and assign deliverables |
+| | `tasks:update` | Modify task title, description, and priority |
+| | `tasks:update_status` | Move tasks across Kanban status columns |
+| | `tasks:complete` | Sign off and mark tasks as complete |
+| | `tasks:manage_all` | Administrative bypass to manage any task |
+| | `tasks:delete` | Permanently remove a task |
+| **Clients** | `clients:read` | View B2B client company profiles |
+| | `clients:create` | Onboard and create client records |
+| | `clients:update` | Update company information, contacts, and status |
+| | `clients:delete` | Remove client records from the catalog |
+| **Analytics** | `analytics:read` | Access executive KPI summaries and revenue stats |
 
-### 4. 📋 Task & Kanban Management (`/tasks`)
-- Granular task tracking associated with projects:
-  - **Statuses:** `BACKLOG`, `TO_DO`, `IN_PROGRESS`, `REVIEW`, `DONE`.
-  - **Priorities:** `LOW`, `MEDIUM`, `HIGH`.
-- Real-time status (`PATCH /tasks/:id/status`) and priority (`PATCH /tasks/:id/priority`) updates designed for fast Kanban drag-and-drop interactions.
-- Creator and assignee user relations.
-
-### 5. 📊 Analytics & Dashboard (`/dashboard`)
-- High-level CRM metrics: active project counts, total contract values, and completion metrics aggregated directly from the database for executive views.
-
-### 6. 👥 Users & Profiles (`/users`, `/user-profiles`)
-- User management with assigned system roles and personalized profile information (`firstName`, `lastName`, etc.).
-
----
-
-## 🛡 Database Schema & Roles
-
-The system uses strong relational mappings and native PostgreSQL enums:
-
-- **Users (`UserEntity`)** $\leftrightarrow$ **Profiles (`UserProfileEntity`)** (One-to-One)
-- **Users (`UserEntity`)** $\rightarrow$ **Roles (`RoleEntity`)** (Many-to-One)
-- **Clients (`ClientProfileEntity`)** $\rightarrow$ **Projects (`ProjectEntity`)** (One-to-Many)
-- **Projects (`ProjectEntity`)** $\rightarrow$ **Tasks (`TaskEntity`)** (One-to-Many, cascade deletion)
-- **Tasks (`TaskEntity`)** $\rightarrow$ **Users (`UserEntity`)** (Creator & Assignee relations)
+### 2. Declarative Decorators & Guards
+- **`@RequirePermissions(...permissions)`**: Enforces specific granular permissions evaluated by `PermissionsGuard` from the JWT claims payload.
+- **`@Roles(...roles)`**: Restricts administrative routes (e.g., user provisioning) via `RolesGuard`.
+- **`@CurrentUser()`**: Custom parameter decorator extracting the authenticated user entity and permissions directly from the request context.
+- **`@Public()`**: Bypasses global authentication for unauthenticated health probes or public documentation.
 
 ---
 
-## 🔑 Default Test Credentials
+## 🛡 Database Schema & Relational Design
 
-The database seeder (`npm run seed`) automatically creates 4 accounts covering each role (all use password: `password123`):
+The relational schema ensures referential integrity, automated cascades, and strict foreign key constraints:
 
-| Role | Email | Password | Permissions |
+```text
+  ┌──────────────────┐         1:1         ┌────────────────────────┐
+  │   UserEntity     │ ─────────────────── │   UserProfileEntity    │
+  │     (users)      │                     │    (user_profiles)     │
+  └─────────┬────────┘                     └────────────────────────┘
+            │ N:1
+            ▼
+  ┌──────────────────┐        N:M          ┌────────────────────────┐
+  │    RoleEntity    │ ◄─────────────────► │    PermissionEntity    │
+  │     (roles)      │  (role_permissions) │     (permissions)      │
+  └──────────────────┘                     └────────────────────────┘
+            ▲
+            │ (Creator / Assignee)
+            │
+  ┌──────────────────┐         1:N         ┌────────────────────────┐
+  │  ProjectEntity   │ ─────────────────── │       TaskEntity       │
+  │    (projects)    │                     │        (tasks)         │
+  └─────────▲────────┘                     └────────────────────────┘
+            │ N:1
+            │
+  ┌──────────────────┐
+  │ClientProfileEnt. │
+  │ (client_profiles)│
+  └──────────────────┘
+```
+
+- **PostgreSQL Tables:** Plural lowercase naming convention (`users`, `user_profiles`, `roles`, `permissions`, `role_permissions`, `client_profiles`, `projects`, `tasks`).
+- **Foreign Keys:** Snake_case convention (`project_id`, `client_id`, `manager_id`, `creator_id`, `assignee_id`).
+
+---
+
+## ⚡ Core Modules & Features
+
+### 1. 🏢 Client Profiles Module (`/client`, `/clients`)
+- Full lifecycle management for B2B client profiles: company name, contact person, email, phone, and contract values.
+- Client status transitions (`ACTIVE`, `INACTIVE`, `LEAD`, `ARCHIVED`).
+- Dual routing support: accessible via both `/client` and `/clients`.
+- Paginated search with case-insensitive name, contact, and email filtering.
+
+### 2. 📁 Projects Module (`/projects`)
+- Multi-project management with budget tracking, target delivery dates, client linkages, and dedicated project manager assignments.
+- Lifecycle state transitions (`PLANNING`, `ACTIVE`, `REVIEW`, `COMPLETED`, `PAUSED`).
+- **Deletion Safety Constraint:** Hard deletion (`DELETE /projects/:id`) is strictly prevented if the project has linked tasks (`BadRequestException`), protecting project history and audit records.
+
+### 3. 📋 Tasks & Kanban Module (`/tasks`)
+- Granular deliverable tracking with Kanban status columns: `TODO`, `IN_PROGRESS`, `REVIEW`, `DONE`, `BACKLOG`.
+- Priority levels: `LOW`, `MEDIUM`, `HIGH`, `URGENT`.
+- High-efficiency status (`PATCH /tasks/:id/status`) and priority (`PATCH /tasks/:id/priority`) endpoints optimized for drag-and-drop operations.
+- Dynamic filtering by project, priority, status, and assignee.
+
+### 4. 📊 Analytics & Dashboard Module (`/dashboard`)
+- High-performance SQL aggregation returning executive metrics:
+  - Active and total project counts.
+  - Total contracted budget valuations.
+  - Task completion ratios and client portfolio breakdowns.
+
+### 5. 👥 Users & Provisioning Module (`/users`, `/user-profiles`)
+- Provisioning restricted to `ADMIN` and `MANAGER` roles.
+- Automatic password hashing via `bcrypt` with validation checks against duplicate email registrations.
+- Profile linkage storing first name, last name, and role associations.
+
+---
+
+## 📡 API Endpoints & Permission Matrix
+
+| Method | Endpoint | Description | Required Permission / Guard |
 | :--- | :--- | :--- | :--- |
-| **Admin** | `admin@crm.com` | `password123` | Full system access, project/task creation, client management, user management |
-| **Manager** | `manager@crm.com` | `password123` | Client management, project/task creation & status updates, dashboard analytics |
-| **Developer** | `developer@crm.com` | `password123` | View assigned projects & tasks, update task status & details |
-| **Client** | `client@crm.com` | `password123` | Read-only view of associated projects & high-level progress |
-
-> In addition, the seeder populates **18 realistic B2B client companies** (e.g., *Helix Biotech*, *Dune Media Partners*, *Vertex Pharmaceuticals*) with populated contract values, projects, and task records.
+| `POST` | `/auth/login` | Authenticate user & generate JWT token | Public |
+| `GET` | `/auth/profile` | Retrieve active authenticated user session | JWT Required |
+| `GET` | `/health` | Healthcheck and timestamp probe | Public (`@Public()`) |
+| `GET` | `/dashboard/stats` | Aggregated CRM KPIs and financial statistics | `analytics:read` |
+| `GET` | `/client` | Paginated and filtered client company catalog | `clients:read` |
+| `POST` | `/client` | Create a new B2B client profile | `clients:create` |
+| `GET` | `/client/:id` | Retrieve specific client profile details | `clients:read` |
+| `PATCH` | `/client/:id` | Update client details and contract value | `clients:update` |
+| `PATCH` | `/client/:id/status` | Update client lifecycle status | `clients:update` |
+| `DELETE`| `/client/:id` | Remove a client profile | `clients:delete` |
+| `GET` | `/projects` | Paginated and filtered project catalog | `projects:read` |
+| `POST` | `/projects` | Create a new project | `projects:create` |
+| `GET` | `/projects/:id` | Get detailed project view with client/manager | `projects:read` |
+| `PATCH` | `/projects/:id` | Update project metadata and deadlines | `projects:update` |
+| `PATCH` | `/projects/:id/status`| Transition project lifecycle status | `projects:update` |
+| `DELETE`| `/projects/:id` | Delete project (only if 0 tasks linked) | `projects:delete` |
+| `GET` | `/tasks` | Retrieve all deliverables | `tasks:read` |
+| `GET` | `/tasks/project/:id` | Retrieve all deliverables for a project | `tasks:read` |
+| `GET` | `/tasks/filter` | Query tasks with multi-attribute filters | `tasks:read` |
+| `POST` | `/tasks` | Create a new project deliverable | `tasks:create` |
+| `PATCH` | `/tasks/:id` | Update deliverable title/description | `tasks:update` |
+| `PATCH` | `/tasks/:id/status` | Kanban drag-and-drop status update | `tasks:update` |
+| `PATCH` | `/tasks/:id/priority`| Fast deliverable priority transition | `tasks:update` |
+| `DELETE`| `/tasks/:id` | Permanently delete a deliverable | `tasks:delete` |
+| `GET` | `/users` | List system users (filterable) | JWT Required |
+| `POST` | `/users` | Provision a new system user | `ADMIN` or `MANAGER` role |
 
 ---
 
-## 📡 API Endpoints Overview
+## 🔑 Default Test Credentials & Seeding
 
-| Method | Endpoint | Description | Access |
+The database seeder (`npm run seed`) seeds default roles, permissions, realistic client portfolios, active projects, deliverables, and 4 role-specific test accounts (all passwords: `password123`):
+
+| Role | Email | Password | Assigned Permissions |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/auth/login` | Authenticate user & receive JWT token | Public |
-| `GET` | `/auth/profile` | Retrieve current authenticated user profile | JWT Required |
-| `GET` | `/health` | Healthcheck endpoint (`{ status: 'ok' }`) | Public |
-| `GET` | `/dashboard/stats` | Aggregated CRM financial & project metrics | `admin`, `manager` |
-| `GET` | `/client` | Paginated & filtered list of clients | `admin`, `manager` |
-| `POST` | `/client` | Create a new client profile | `admin`, `manager` |
-| `GET` | `/client/:id` | Get client details by ID | `admin`, `manager` |
-| `PATCH` | `/client/:id` | Update client details | `admin`, `manager` |
-| `PATCH` | `/client/:id/status`| Update client status | `admin`, `manager` |
-| `GET` | `/projects` | Paginated & filtered project list | `admin`, `manager`, `client` |
-| `POST` | `/projects` | Create a new project | `admin`, `manager` |
-| `GET` | `/projects/:id` | Get project details | `admin`, `manager`, `client` |
-| `PATCH` | `/projects/:id` | Update project metadata | `admin`, `manager` |
-| `PATCH` | `/projects/:id/status`| Update project lifecycle status | `admin`, `manager` |
-| `DELETE`| `/projects/:id` | Delete a project and cascading tasks | `admin`, `manager` |
-| `GET` | `/tasks` | Retrieve all tasks | Authenticated |
-| `GET` | `/tasks/project/:id`| Retrieve tasks for a specific project | Authenticated |
-| `GET` | `/tasks/filter` | Query tasks with filters | Authenticated |
-| `POST` | `/tasks` | Create a new task | `admin`, `manager` |
-| `PATCH` | `/tasks/:id` | Update task details | `admin`, `manager`, `developer` |
-| `PATCH` | `/tasks/:id/status` | Quick status change (Kanban move) | Authenticated |
-| `PATCH` | `/tasks/:id/priority`| Quick priority change | Authenticated |
-| `DELETE`| `/tasks/:id` | Delete a task | `admin`, `manager` |
-| `GET` | `/users` | List users (filterable by role/search) | Authenticated |
-| `POST` | `/users` | Create user | Authenticated |
+| **Admin** | `admin@crm.com` | `password123` | Full access (`projects:*`, `tasks:*`, `clients:*`, `analytics:*`, User Provisioning) |
+| **Manager** | `manager@crm.com` | `password123` | Project/Client management, Task creation & assignment, Dashboard analytics |
+| **Developer** | `developer@crm.com` | `password123` | View assigned projects & tasks, update task status and details |
+| **Client** | `client@crm.com` | `password123` | Read-only project deliverables view via Client Portal |
+
+> The seeder also populates **18 realistic B2B client organizations** (e.g., *Helix Biotech*, *Dune Media Partners*, *Vertex Pharmaceuticals*) along with active projects, milestone deadlines, and tasks.
 
 ---
 
 ## 📋 Prerequisites
 
-- **Node.js**: v20.x or v24.x recommended
-- **npm**: v10+
-- **PostgreSQL**: v15+ (or Docker / Docker Desktop)
+- **Node.js**: v20.x, v22.x, or v24.x
+- **npm**: v10+ or v11+
+- **PostgreSQL**: v15+ (local instance or Docker)
 
 ---
 
@@ -163,9 +224,9 @@ Create a `.env` file in the root directory:
 ```bash
 npm run env:init
 ```
-Or manually copy `.env.example` to `.env`:
+Or configure your `.env` directly:
 ```env
-# Database Configuration (Docker / Local)
+# Database Configuration
 DB_HOST=localhost
 DB_PORT=5432
 DB_USERNAME=postgres
@@ -173,58 +234,57 @@ DB_PASSWORD=postgres_password
 DB_DATABASE=crm_db
 DB_SSL=false
 
-# Optional: Cloud PostgreSQL connection string (e.g. Neon.tech, Supabase, Render)
+# Optional: Cloud PostgreSQL URL (e.g., Neon, Render, Supabase)
 # POSTGRES_BASE=postgresql://user:password@host/dbname?sslmode=require
 
-# Application
+# Application Settings
 PORT=8080
 JWT_SECRET=SUPER_SECRET_KEY
 JWT_EXPIRES_IN=12h
 ROLES_KEY=superRolesKey
+PERMISSIONS_KEY=permissions
 ```
 
-### 4. Start PostgreSQL (Local or Docker)
-If you don't have a local PostgreSQL instance installed, you can spin one up via Docker:
+### 4. Start PostgreSQL (via Docker)
 ```bash
 docker compose up -d postgres_db adminer
 ```
-- **PostgreSQL** will be available at `localhost:5432`
-- **Adminer** (database web GUI) will be available at `http://localhost:8081`
+- **PostgreSQL Database:** `localhost:5432`
+- **Adminer Web GUI:** `http://localhost:8081`
 
-### 5. Seed initial data
-Run the seeding script to create roles, users, clients, projects, and sample tasks:
+### 5. Seed the database
 ```bash
 npm run seed
 ```
 
-### 6. Start the development server
+### 6. Run the application
 ```bash
+# Development mode with hot-reload
 npm run start:dev
+
+# Production build and run
+npm run build
+npm run start:prod
 ```
 The API will be available at: **`http://localhost:8080`**  
-Verify with health check: **`http://localhost:8080/health`**
+Verify health probe: **`http://localhost:8080/health`**
 
 ---
 
 ## 🐳 Running with Docker
 
-You can run the entire backend stack (NestJS API + PostgreSQL 15 + Adminer) with a single command:
+Run the entire backend stack (NestJS API + PostgreSQL 15 + Adminer) via Docker Compose:
 
 ```bash
-# Build and run containers
+# Build and run all containers
 docker compose up --build -d
 
-# View container logs
+# View live API logs
 docker compose logs -f api
 
 # Stop all containers
 docker compose down
 ```
-
-Ports:
-- **NestJS API:** `http://localhost:8080`
-- **Adminer GUI:** `http://localhost:8081`
-- **Postgres Database:** `localhost:5432`
 
 ---
 
@@ -236,13 +296,13 @@ TypeORM migrations are managed via npm scripts:
 # Generate a new migration based on entity changes
 npm run migration:generate -- -n MigrationName
 
-# Run pending migrations
+# Apply pending migrations
 npm run migration:run
 
-# Revert the last applied migration
+# Revert the latest applied migration
 npm run migration:revert
 
-# Run database seed
+# Run complete database seeder
 npm run seed
 ```
 
@@ -252,20 +312,20 @@ npm run seed
 
 | Command | Description |
 | :--- | :--- |
-| `npm run start:dev` | Start NestJS in watch mode (hot-reload) |
-| `npm run build` | Build production bundle into `dist/` |
-| `npm run start:prod` | Run the compiled production build (`node dist/main`) |
-| `npm run seed` | Seed database with roles, users, clients, and tasks |
+| `npm run start:dev` | Launch NestJS application in watch mode |
+| `npm run build` | Compile TypeScript source code into `dist/` |
+| `npm run start:prod` | Execute compiled production bundle (`node dist/main`) |
+| `npm run seed` | Seed database with roles, permissions, users, clients, and projects |
 | `npm run lint` | Run ESLint with automatic fixes |
-| `npm run format` | Format source and test files with Prettier |
+| `npm run format` | Format code with Prettier |
 | `npm test` | Run Jest unit tests |
-| `npm run test:cov` | Run tests with coverage reports |
-| `npm run test:e2e` | Run end-to-end tests |
+| `npm run test:cov` | Generate unit test coverage reports |
+| `npm run test:e2e` | Run end-to-end API tests |
 | `npm run env:init` | Initialize `.env` file from `.env.example` |
 
 ---
 
 ## 🌐 CI/CD & Deployment
 
-- **GitHub Actions:** Every push or pull request to `main`, `master`, or `develop` triggers automated linting, test execution, and production build checks.
-- **Continuous Deployment:** Merges to `master` trigger an automated webhook deployment to **Render** hosting the live backend API.
+- **GitHub Actions:** Automated test suite and build verification run on every commit and pull request.
+- **Continuous Deployment:** Merges to `master` trigger an automated deployment webhook to **Render**, keeping the live backend updated.
