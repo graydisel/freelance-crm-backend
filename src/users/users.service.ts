@@ -7,7 +7,7 @@ import { RolesService } from '../roles/roles.service';
 import * as bcrypt from 'bcrypt';
 import { EntityManager } from 'typeorm';
 import { ClientProfileEntity } from 'src/client-profiles/client-profile.entity';
-import { UserRoleEnum } from './enums/user-role.enum';
+import { UserRoleEnum } from '../common/enums/user-role.enum';
 import { UserProfileEntity } from 'src/user-profiles/user-profiles.entity';
 
 @Injectable()
@@ -18,7 +18,7 @@ export class UsersService {
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
     private readonly rolesService: RolesService,
-  ) {}
+  ) { }
 
   async createUser(
     createUserDto: CreateUserDto,
