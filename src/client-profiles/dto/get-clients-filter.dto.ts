@@ -29,14 +29,16 @@ export class GetClientsFilterDto {
   @IsOptional()
   @IsArray()
   @IsEnum(ClientStatus, { each: true })
-  @Transform(({ value, obj }: { value: any; obj: any }) => {
-    const raw = value ?? obj?.status;
-    if (!raw) return undefined;
-    if (Array.isArray(raw)) return raw as unknown[];
-    return typeof raw === 'string'
-      ? (raw.split(',') as unknown[])
-      : ([raw] as unknown[]);
-  })
+  @Transform(
+    ({ value, obj }: { value: unknown; obj: { status?: unknown } }) => {
+      const raw: unknown = value ?? obj?.status;
+      if (!raw) return undefined;
+      if (Array.isArray(raw)) return raw as unknown[];
+      return typeof raw === 'string'
+        ? (raw.split(',') as unknown[])
+        : ([raw] as unknown[]);
+    },
+  )
   statuses?: ClientStatus[];
 
   @IsOptional()
