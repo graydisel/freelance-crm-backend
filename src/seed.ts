@@ -24,42 +24,42 @@ async function run() {
   const dataSource = new DataSource(
     isRemote
       ? {
-          type: 'postgres',
-          url: process.env.POSTGRES_BASE,
-          ssl:
-            process.env.DB_SSL === 'false'
-              ? false
-              : { rejectUnauthorized: false },
-          entities: [
-            UserEntity,
-            RoleEntity,
-            ClientProfileEntity,
-            ProjectEntity,
-            TaskEntity,
-            UserProfileEntity,
-            PermissionEntity,
-          ],
-          synchronize: true,
-        }
+        type: 'postgres',
+        url: process.env.POSTGRES_BASE,
+        ssl:
+          process.env.DB_SSL === 'false'
+            ? false
+            : { rejectUnauthorized: false },
+        entities: [
+          UserEntity,
+          RoleEntity,
+          ClientProfileEntity,
+          ProjectEntity,
+          TaskEntity,
+          UserProfileEntity,
+          PermissionEntity,
+        ],
+        synchronize: true,
+      }
       : {
-          type: 'postgres',
-          host: process.env.DB_HOST || 'localhost',
-          port: Number(process.env.DB_PORT) || 5432,
-          username: process.env.DB_USERNAME || 'postgres',
-          password: process.env.DB_PASSWORD || 'postgres_password',
-          database: process.env.DB_DATABASE || 'crm_db',
-          ssl: false,
-          entities: [
-            UserEntity,
-            RoleEntity,
-            ClientProfileEntity,
-            ProjectEntity,
-            TaskEntity,
-            UserProfileEntity,
-            PermissionEntity,
-          ],
-          synchronize: true,
-        },
+        type: 'postgres',
+        host: process.env.DB_HOST || 'localhost',
+        port: Number(process.env.DB_PORT) || 5432,
+        username: process.env.DB_USERNAME || 'postgres',
+        password: process.env.DB_PASSWORD || 'postgres_password',
+        database: process.env.DB_DATABASE || 'crm_db',
+        ssl: false,
+        entities: [
+          UserEntity,
+          RoleEntity,
+          ClientProfileEntity,
+          ProjectEntity,
+          TaskEntity,
+          UserProfileEntity,
+          PermissionEntity,
+        ],
+        synchronize: true,
+      },
   );
 
   try {
@@ -165,6 +165,9 @@ async function run() {
 
     console.log('👤 Checking system users...');
     const passwordHash = await bcrypt.hash('password123', 10);
+    const passwordHashAdmin = await bcrypt.hash('admin1234567', 10);
+    const passwordHashManager = await bcrypt.hash('manager1234567', 10);
+
 
     let admin = await userRepo.findOne({
       where: { email: 'admin@crm.com' },
@@ -178,13 +181,17 @@ async function run() {
             firstName: 'System',
             lastName: 'Administrator',
           },
-          passwordHash,
+          passwordHash: passwordHashAdmin,
           role: adminRole,
         }),
       );
     } else if (admin.role?.id !== adminRole.id) {
       admin.role = adminRole;
       admin = await userRepo.save(admin);
+    } else if (admin.passwordHash !== passwordHashAdmin) {
+      admin.passwordHash = passwordHashAdmin;
+      admin = await userRepo.save(admin);
+      console.log('🔐 Admin password updated.');
     }
 
     let manager = await userRepo.findOne({
@@ -199,13 +206,17 @@ async function run() {
             firstName: 'Elena',
             lastName: 'Smirnova',
           },
-          passwordHash,
+          passwordHash: passwordHashManager,
           role: managerRole,
         }),
       );
     } else if (manager.role?.id !== managerRole.id) {
       manager.role = managerRole;
       manager = await userRepo.save(manager);
+    } else if (manager.passwordHash !== passwordHashManager) {
+      manager.passwordHash = passwordHashManager;
+      manager = await userRepo.save(manager);
+      console.log('🔐 Manager password updated.');
     }
 
     let developer = await userRepo.findOne({
